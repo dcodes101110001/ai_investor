@@ -1,0 +1,80 @@
+"""
+Converted from: Chapter 3 - Exercise 4 - Python Dictionaries.ipynb
+
+This script contains code extracted from a Jupyter notebook.
+Code has been organized for modular execution.
+"""
+
+"""
+Exercise 4 - Python Dictionaries
+"""
+
+# Code from Book: Build Your Own AI Investor
+# Damon Lee 2021
+# Check out the performance on www.valueinvestingai.com
+# Code uses data from the (presumably) nice people at https://simfin.com/. 
+# Feel free to fork this code for others to see what can be done with it.
+
+# A python Dictionary is a kind of lookup table. It can store a series of any kind of object which is accessed with a 'key'.
+dict1 = {} # This is how to create en empty dictionary.
+
+# Here we fill our Python dictionary which stores data about one person.
+dict1 = {
+    'Name': 'Max',
+    'Height': 1.9,
+    'Test Scores':[50, 62, 78, 47],
+    'Nationality':'German'
+}
+print(dict1)
+
+# The first item is the 'Key', the item after the colon: is the infomation to be accessed with the key.
+dict1['Name'] # View the info behind item 'Name'
+
+dict1['Height'] # View the info behind item 'Height'
+
+# You can view all the keys in your dictionary with the .keys() function
+dict1.keys()
+
+# You can add items to Dictionaries by stating them:
+dict1['Shoe Size'] = 7
+print(dict1)
+
+# You can delete items with the del command as with all other variables in Python.
+del dict1['Height']
+print(dict1)
+
+"""
+Exercise 4
+"""
+# Dictionaries are quite a fundamental must-know object in Python, they are essentially look-up tables.
+
+# Use a loop to fill in a list of dictionaries with company data,
+# where each dictionary contains infomation for one stock.
+# Stock infomation is provided
+
+# Once the data is stored in a list of dicts, use a loop and an if statement to filter out our stocks.
+# Have the loop create a new list of dictionaries of companies we have filtered.
+
+# Given data.
+Stocks = ['JKHY', 'FSTR', 'ETV', 'WAFD', 'RSG', 'HTGC']
+PriceEarningsRatios = [48.54, 3.29, 5.71, 9.18, 23.89, 14.02]
+Beta = [0.59, 1.67, 0.89, 0.99, 0.62, 1.51]
+
+# Correct this loop to fill our list of dictionaries
+stockDictDicts = {}#Create empty dict we will fill with infomation
+for i, S in enumerate(Stocks): 
+    stockDictDicts[S] =  {'PE':PriceEarningsRatios[i],\
+                         'Beta':Beta[i]}
+
+stockDictDicts # View out list of dictionaries with all data
+
+# With infomation stored in this way we can see infomation about a single company:
+stockDictDicts['WAFD']
+
+# And with a loop we can filter stocks by their internal information:
+filt_dict = [] # empty list to fill up
+for dict_i in stockDictDicts:
+    if(stockDictDicts[dict_i]['PE'] < 10):
+        filt_dict.append(dict_i)
+
+print(filt_dict)
