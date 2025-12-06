@@ -12,6 +12,10 @@ jobs:
     name: Download SimFin Financial Data
     runs-on: ubuntu-latest
     
+    # Limit GITHUB_TOKEN permissions to minimum required
+    permissions:
+      contents: read
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
