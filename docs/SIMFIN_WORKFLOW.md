@@ -14,9 +14,9 @@ All data is saved to the `stock_data/` directory in the repository.
 
 ## Setup
 
-### 1. Set SimFin API Key
+### 1. Configure SimFin API Key as GitHub Secret
 
-To use this workflow, you need to configure your SimFin API key as a GitHub secret:
+To use this workflow, you need to configure your SimFin API key as a **GitHub Secret**:
 
 1. Get your API key from [SimFin](https://www.simfin.com/) (free tier is sufficient)
 2. Go to your repository settings on GitHub
@@ -25,6 +25,8 @@ To use this workflow, you need to configure your SimFin API key as a GitHub secr
 5. Name: `SIMFIN_API_KEY`
 6. Value: Your SimFin API key
 7. Click `Add secret`
+
+**Why GitHub Secrets?** GitHub Secrets securely store sensitive information like API keys. The workflow accesses the secret using `${{ secrets.SIMFIN_API_KEY }}`, which prevents the key from being exposed in logs or code.
 
 ### 2. Enable GitHub Actions
 

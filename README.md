@@ -16,7 +16,8 @@ Stock fundamental and price data from https://simfin.com/ is required (their fre
 This repository includes a GitHub Actions workflow that automatically downloads SimFin data daily. To enable it:
 
 1. Get your free API key from [SimFin](https://www.simfin.com/)
-2. Add it as a repository secret named `SIMFIN_API_KEY`
+2. Add it as a **GitHub Secret** named `SIMFIN_API_KEY` in your repository settings
+   - Go to `Settings` > `Secrets and variables` > `Actions` > `New repository secret`
 3. The workflow runs daily at 2 AM UTC, or can be triggered manually
 
 For detailed setup instructions, see [docs/SIMFIN_WORKFLOW.md](docs/SIMFIN_WORKFLOW.md).

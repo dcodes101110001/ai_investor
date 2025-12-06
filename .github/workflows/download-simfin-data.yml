@@ -36,6 +36,8 @@ jobs:
 
       - name: Download SimFin data
         env:
+          # Uses GitHub Secret for secure API key storage
+          # Configure SIMFIN_API_KEY in repository Settings > Secrets and variables > Actions
           SIMFIN_API_KEY: ${{ secrets.SIMFIN_API_KEY }}
         run: |
           echo "Starting SimFin data download..."
