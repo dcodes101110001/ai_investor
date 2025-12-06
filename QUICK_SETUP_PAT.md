@@ -16,6 +16,11 @@ You need to configure a GitHub Personal Access Token (PAT).
 ### Step 1: Create Personal Access Token
 1. Go to: **https://github.com/settings/tokens**
 2. Click: **"Generate new token"** → **"Generate new token (classic)"**
+   
+   > 💡 **Note**: You can also use fine-grained personal access tokens (beta) for enhanced security. 
+   > They provide more granular permissions and can be scoped to specific repositories. 
+   > However, classic tokens are simpler to set up and work well for most use cases.
+   
 3. Fill in:
    - **Note**: `AI Investor Workflow - Data Upload`
    - **Expiration**: 90 days (or custom)

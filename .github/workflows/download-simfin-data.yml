@@ -224,7 +224,14 @@ jobs:
             echo "✓ SSH authentication configured successfully"
           else
             echo "❌ ERROR: USE_SSH_AUTH is enabled but SSH_DEPLOY_KEY secret not found"
-            echo "Please add the SSH_DEPLOY_KEY secret or set USE_SSH_AUTH=false"
+            echo ""
+            echo "To fix this issue, choose one of these options:"
+            echo "  1. Add SSH_DEPLOY_KEY secret (see WORKFLOW_AUTHENTICATION_SETUP.md)"
+            echo "  2. Disable SSH authentication:"
+            echo "     → Go to: Repository Settings → Secrets and variables → Actions → Variables tab"
+            echo "     → Find 'USE_SSH_AUTH' and delete it (or set value to 'false')"
+            echo "     → Then add GITHUB_PAT secret instead"
+            echo ""
             exit 1
           fi
       
@@ -376,8 +383,9 @@ jobs:
               echo "✓ SSH Deploy Key authentication configured"
               exit 0
             else
+              # This should rarely happen as the SSH setup step would have failed earlier
               echo "❌ ERROR: USE_SSH_AUTH is enabled but SSH_DEPLOY_KEY secret not found"
-              echo "Please add the SSH_DEPLOY_KEY secret or disable USE_SSH_AUTH"
+              echo "The 'Setup SSH Deploy Key' step should have caught this earlier."
               exit 1
             fi
           fi
