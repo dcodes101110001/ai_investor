@@ -21,7 +21,7 @@ The error was caused by:
 
 ## Implemented Solutions
 
-### 1. Shallow Clone Optimization (Line 23)
+### 1. Shallow Clone Optimization
 
 **Change:**
 ```yaml
@@ -36,7 +36,7 @@ The error was caused by:
 - Faster checkout time
 - Reduces network bandwidth usage
 
-### 2. Increased Git Buffer Size (Line 86)
+### 2. Increased Git Buffer Size
 
 **Change:**
 ```bash
@@ -48,7 +48,7 @@ git config --global http.postBuffer 157286400
 - Allows Git to handle larger data transfers without fragmenting
 - Prevents premature timeout on large payloads
 
-### 3. HTTP Timeout Configuration (Lines 89-90)
+### 3. HTTP Timeout Configuration
 
 **Changes:**
 ```bash
@@ -62,7 +62,7 @@ git config --global http.lowSpeedTime 60
 - More lenient timeout settings for large file transfers
 - Handles temporary network slowdowns gracefully
 
-### 4. Retry Logic with Exponential Backoff (Lines 131-164)
+### 4. Retry Logic with Exponential Backoff
 
 **Change:**
 ```bash
