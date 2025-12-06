@@ -443,9 +443,71 @@ jobs:
             echo "Push attempt $attempt of $max_attempts..."
             echo "Pushing to branch: $TARGET_BRANCH"
             
+            # Ensure we have the latest changes from remote before pushing
+            # This prevents "git pull" errors when remote has new commits
+            echo "Fetching latest changes from remote..."
+            if git fetch origin "$TARGET_BRANCH" 2>&1 | tee -a "$push_error_log"; then
+              echo "✓ Fetched latest changes from remote"
+              
+              # Check if remote branch has new commits we don't have locally
+              LOCAL_COMMIT=$(git rev-parse HEAD)
+              REMOTE_COMMIT=$(git rev-parse "origin/$TARGET_BRANCH" 2>/dev/null || echo "")
+              
+              if [ -n "$REMOTE_COMMIT" ] && [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
+                echo "⚠️ Remote branch has new commits. Rebasing local changes..."
+                
+                # Rebase our changes on top of remote changes
+                # This ensures our commit is on top of any concurrent workflow commits
+                if git rebase "origin/$TARGET_BRANCH" 2>&1 | tee -a "$push_error_log"; then
+                  echo "✓ Successfully rebased local changes on remote"
+                else
+                  rebase_exit_code=$?
+                  echo "⚠️ Rebase failed with exit code: $rebase_exit_code"
+                  echo "Attempting to resolve conflicts automatically..."
+                  
+                  # For data files, we can use 'ours' strategy (keep our version)
+                  # since automated data downloads should overwrite old data
+                  git checkout --ours stock_data/ 2>/dev/null || true
+                  git add stock_data/ 2>/dev/null || true
+                  
+                  # Try to continue rebase
+                  if git rebase --continue 2>&1 | tee -a "$push_error_log"; then
+                    echo "✓ Conflicts resolved, rebase completed"
+                  else
+                    echo "❌ Cannot automatically resolve conflicts"
+                    echo "Aborting rebase and using force push..."
+                    git rebase --abort
+                    
+                    # As a fallback, force push (safe for data branch)
+                    echo "Using force push to overwrite remote branch..."
+                    if git push --force-with-lease origin "$TARGET_BRANCH" 2>&1 | tee -a "$push_error_log"; then
+                      echo "✓ Changes force-pushed successfully to branch: $TARGET_BRANCH"
+                      echo ""
+                      echo "Summary:"
+                      echo "  - Data downloaded and committed"
+                      echo "  - Branch: $TARGET_BRANCH"
+                      echo "  - Commit: $(git rev-parse HEAD)"
+                      echo "  - Method: Force push (with lease)"
+                      echo ""
+                      echo "📝 Note: Changes are on the '$TARGET_BRANCH' branch"
+                      echo "   You can review and merge these changes into your main branch when ready."
+                      break  # Exit the retry loop successfully
+                    else
+                      echo "❌ Force push also failed"
+                      # Continue to retry logic below
+                    fi
+                  fi
+                fi
+              else
+                echo "✓ Local branch is up-to-date with remote"
+              fi
+            else
+              echo "⚠️ Failed to fetch from remote (branch may not exist yet)"
+            fi
+            
             # Push commits to the data update branch
             # Capture both stdout and stderr for better error diagnosis
-            if git push origin "$TARGET_BRANCH" 2>&1 | tee "$push_error_log"; then
+            if git push origin "$TARGET_BRANCH" 2>&1 | tee -a "$push_error_log"; then
               echo "✓ Changes pushed successfully to branch: $TARGET_BRANCH"
               echo ""
               echo "Summary:"
@@ -456,7 +518,7 @@ jobs:
               echo "📝 Note: Changes are on the '$TARGET_BRANCH' branch"
               echo "   You can review and merge these changes into your main branch when ready."
               
-              exit 0
+              break  # Exit retry loop successfully
             else
               # Capture the exit code
               push_exit_code=$?
@@ -484,6 +546,7 @@ jobs:
                 echo "  • Network connectivity issues"
                 echo "  • Large file size exceeds GitHub limits (100MB per file)"
                 echo "  • Branch protection rules blocking push"
+                echo "  • Remote branch updated by concurrent workflow run (use git pull)"
                 echo ""
                 echo "SOLUTION:"
                 echo "----------"
