@@ -40,7 +40,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np # scikitlearn uses numpy arrays
 
-data = pd.read_csv('LinRegData.csv') # Read in our data
+data = pd.read_csv('stock_data\LinRegData.csv') # Read in our data
 data.head() # See the first few rows to understand the data
 
 
@@ -332,7 +332,7 @@ We'll use learning curves with Scikit-Learn linear regressors next.
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
-data=pd.read_csv('Exercise_10_stock_data_performance_fundamentals.csv', 
+data=pd.read_csv('stock_data\Exercise_10_stock_data_performance_fundamentals.csv', 
                  index_col=0)
 data
 
@@ -341,7 +341,7 @@ data
 # Cell 31
 # ==============================================================================
 
-#data = pd.read_csv('Exercise_9_stock_data_performance_fundamentals.csv', index_col=0) # Read in our data
+#data = pd.read_csv('stock_data\Exercise_9_stock_data_performance_fundamentals.csv', index_col=0) # Read in our data
 #from pandas.plotting import scatter_matrix # If want scatter matrix
 #scatter_matrix(data, alpha=0.2, figsize=(10, 10))
 

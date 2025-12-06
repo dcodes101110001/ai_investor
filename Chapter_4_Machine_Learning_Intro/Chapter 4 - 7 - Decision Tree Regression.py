@@ -25,7 +25,7 @@ plt.rcParams['figure.dpi'] = 150
 #https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html
 
 # Get data
-data = pd.read_csv('LinRegData.csv') # Read in our data
+data = pd.read_csv('stock_data\LinRegData.csv') # Read in our data
 data.head() # See the first few rows to understand the data
 
 

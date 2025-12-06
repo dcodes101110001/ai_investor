@@ -565,7 +565,7 @@ badStocks
 # Cell 29
 # ==============================================================================
 
-badStocks = pd.read_csv('badStocks.csv')
+badStocks = pd.read_csv('stock_data\badStocks.csv')
 badStocks
 
 
@@ -579,7 +579,7 @@ badStocks
 # Cell 31
 # ==============================================================================
 
-stockData=pd.read_csv('stockData.csv')
+stockData=pd.read_csv('stock_data\stockData.csv')
 stockData=stockData[stockData['Exchange'].isin(['NYSE MKT', 'NASDAQ', 'NYSE ARCA', 'NYSE'])]
 stockData['date'] = pd.to_datetime(stockData['date'])
 
@@ -643,8 +643,8 @@ features['date']=a['date']
 # Cell 35
 # ==============================================================================
 
-goodStocks = pd.read_csv('goodStocks.csv')
-badStocks = pd.read_csv('badStocks.csv') # badStocks_backup.csv
+goodStocks = pd.read_csv('stock_data\goodStocks.csv')
+badStocks = pd.read_csv('stock_data\badStocks.csv') # badStocks_backup.csv
 
 
 # ==============================================================================

@@ -78,7 +78,7 @@ df.to_csv('people.csv')
 # ==============================================================================
 
 # Now I want to read the data, lets create a new DataFrame. Remember to specify an index column!
-my_data=pd.read_csv('people.csv', index_col=0)
+my_data=pd.read_csv('stock_data\people.csv', index_col=0)
 
 
 # ==============================================================================

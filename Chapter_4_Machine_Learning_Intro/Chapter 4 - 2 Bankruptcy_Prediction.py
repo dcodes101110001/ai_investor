@@ -37,8 +37,8 @@ import pandas as pd
 # ==============================================================================
 
 # Read in bad stocks and good stocks feature data
-badStocks = pd.read_csv('badStocks.csv', index_col=0)
-goodStocks = pd.read_csv('goodStocks.csv', index_col=0)
+badStocks = pd.read_csv('stock_data\badStocks.csv', index_col=0)
+goodStocks = pd.read_csv('stock_data\goodStocks.csv', index_col=0)
 
 badStocks.head()
 

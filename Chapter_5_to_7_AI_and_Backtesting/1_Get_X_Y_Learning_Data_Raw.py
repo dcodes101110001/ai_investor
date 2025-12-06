@@ -47,7 +47,7 @@ plt.rcParams['figure.dpi'] = 150
 # ==============================================================================
 
 #def getXDataMerged(myLocalPath='C:/Users/damon/Stock_Data/SimFin2023/'):
-def getXDataMerged(myLocalPath='C:/Users/damon/OneDrive/BYO_Investing_AI/2024/Stock_Data/SimFin2024/'):
+def getXDataMerged(myLocalPath='stock_data\\'):
     '''
     For combining fundamentals financial data from SimFin,
     or SimFin+ (https://simfin.com/) without API.
@@ -94,7 +94,7 @@ def getXDataMerged(myLocalPath='C:/Users/damon/OneDrive/BYO_Investing_AI/2024/St
 # Cell 6
 # ==============================================================================
 
-def getYRawData(my_local_path='C:/Users/damon/OneDrive/BYO_Investing_AI/2024/Stock_Data/SimFin2024/'):
+def getYRawData(my_local_path='stock_data\\'):
     '''
     Read stock price data from SimFin or SimFin+ (https://simfin.com/),
     without API.
@@ -239,7 +239,7 @@ def getYPricesReportDateAndTargetDate(x, d, modifier=365):
 # ==============================================================================
 
 X = getXDataMerged()
-X.to_csv("Annual_Stock_Price_Fundamentals.csv")
+X.to_csv("stock_data\\Annual_Stock_Price_Fundamentals.csv")
 
 
 # ==============================================================================
@@ -280,7 +280,7 @@ y = getYPricesReportDateAndTargetDate(X, d, 365) # because of lookups in this fu
 y = pd.DataFrame(y, columns=['Ticker', 'Open Price', 'Date', 'Volume',\
                              'Ticker2', 'Open Price2', 'Date2', 'Volume2'
                             ])
-y.to_csv("Annual_Stock_Price_Performance.csv")
+y.to_csv("stock_data\\Annual_Stock_Price_Performance.csv")
 
 
 # ==============================================================================
@@ -300,8 +300,8 @@ y
 # Cell 21
 # ==============================================================================
 
-X=pd.read_csv("Annual_Stock_Price_Fundamentals.csv", index_col=0)
-y=pd.read_csv("Annual_Stock_Price_Performance.csv", index_col=0)
+X=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals.csv", index_col=0)
+y=pd.read_csv("stock_data\\Annual_Stock_Price_Performance.csv", index_col=0)
 
 
 # ==============================================================================
@@ -438,8 +438,8 @@ y.shape
 # Cell 36
 # ==============================================================================
 
-X.to_csv("Annual_Stock_Price_Fundamentals_Filtered.csv")
-y.to_csv("Annual_Stock_Price_Performance_Filtered.csv")
+X.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Filtered.csv")
+y.to_csv("stock_data\\Annual_Stock_Price_Performance_Filtered.csv")
 
 
 # ==============================================================================
@@ -473,7 +473,7 @@ X[80:90]
 # Cell 41
 # ==============================================================================
 
-def getYRawData2024(my_path = 'C:/Users/damon/OneDrive/BYO_Investing_AI/2024/Stock_Data/SimFin2024/'):
+def getYRawData2024(my_path = 'stock_data\\'):
     d=pd.read_csv(my_path + 'us-shareprices-daily.csv', delimiter=';')
     d["Date"]=pd.to_datetime(d["Date"])
     print('Stock Price data matrix is: ',d.shape)
@@ -522,7 +522,7 @@ def getYPricesReportDate(X, d, modifier=365):
 # Cell 46
 # ==============================================================================
 
-def getXFullDataMerged(myLocalPath='C:/Users/damon/OneDrive/BYO_Investing_AI/2024/Stock_Data/SimFin2024/'):
+def getXFullDataMerged(myLocalPath='stock_data\\'):
     '''
     For combining fundamentals financial data from SimFin+ only,
     without API. 
@@ -802,5 +802,5 @@ y
 # Cell 69
 # ==============================================================================
 
-X.to_csv("Annual_Stock_Price_Fundamentals_Filtered_2024_present.csv")
-y2.to_csv("Tickers_Dates_2024_present.csv")
+X.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Filtered_2024_present.csv")
+y2.to_csv("stock_data\\Tickers_Dates_2024_present.csv")

@@ -55,11 +55,11 @@ plt.rcParams['figure.dpi'] = 150
 import pandas as pd
 import numpy as np
 
-industries=pd.read_csv('industries.csv', delimiter=';')
+industries=pd.read_csv('stock_data\industries.csv', delimiter=';')
 
-us_companies=pd.read_csv('us-companies.csv', delimiter=';')
+us_companies=pd.read_csv('stock_data\us-companies.csv', delimiter=';')
 
-us_income_annual=pd.read_csv('us-income-annual.csv', delimiter=';')
+us_income_annual=pd.read_csv('stock_data\us-income-annual.csv', delimiter=';')
 
 
 # ==============================================================================

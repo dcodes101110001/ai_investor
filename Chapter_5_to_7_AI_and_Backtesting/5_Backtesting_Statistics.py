@@ -58,11 +58,11 @@ plt.rcParams['figure.dpi'] = 150
 # to plot the stock prices.
 
 # Financial ratios 
-X=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios.csv", 
+X=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios.csv", 
               index_col=0)
 
 # Annual stock performances, with date data.
-y_withData=pd.read_csv("Annual_Stock_Price_Performance_Filtered.csv", 
+y_withData=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Filtered.csv", 
                        index_col=0)
 
 # Convert to date
@@ -70,13 +70,13 @@ y_withData["Date"] = pd.to_datetime(y_withData["Date"])
 y_withData["Date2"] = pd.to_datetime(y_withData["Date2"])
 
 # X AND Y (splitting for train/test done previously for trained model)
-X_train=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios_train.csv", 
+X_train=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_train.csv", 
                     index_col=0)
-X_test=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios_test.csv", 
+X_test=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_test.csv", 
                    index_col=0)
-y_train=pd.read_csv("Annual_Stock_Price_Performance_Percentage_train.csv", 
+y_train=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Percentage_train.csv", 
                     index_col=0)
-y_test=pd.read_csv("Annual_Stock_Price_Performance_Percentage_test.csv", 
+y_test=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Percentage_test.csv", 
                    index_col=0)
 
 # Get y_withData to correspond to y_test
@@ -132,7 +132,7 @@ def calcZScores(X):
     + 1.05 * X['Book Equity/TL']
     return Z
 
-def getYRawData(directory='C:/Users/damon/OneDrive/BYO_Investing_AI/2024/Stock_Data/SimFin2024/'):
+def getYRawData(directory='stock_data\\'):
     '''
     Can set directory to look for file in.
     Get daily stock price time series for ALL stocks. 
@@ -361,8 +361,8 @@ daily_stock_prices=getYRawData()
 # ==============================================================================
 
 #pl_linear.p, pl_ElasticNet.p, pl_KNeighbors.p, pl_rfregressor.p, pl_decTree.p, pl_svm.p
-#pl_linear = pickle.load(open("pl_linear.p", "rb" ))
-pl_linear = pickle.load(open("pl_rfregressor.p", "rb" ))
+#pl_linear = pickle.load(open("stock_data\\pl_linear.p", "rb" ))
+pl_linear = pickle.load(open("stock_data\\pl_rfregressor.p", "rb" ))
 test = getPortTimeSeries(y_withData_Test, X_test,
                          daily_stock_prices,
                          pl_linear)
@@ -476,7 +476,7 @@ def trainsvmModel(X_train, y_train):
 # ==============================================================================
 
 # Y percentage perf
-y_pec=pd.read_csv("Annual_Stock_Price_Performance_Percentage.csv", index_col=0)["Perf"]
+y_pec=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Percentage.csv", index_col=0)["Perf"]
 
 
 # ==============================================================================
@@ -586,11 +586,11 @@ def getResultsForModel(model_pipeline_list, runs_per_model=1, verbose=True):
     # To keep code simple this is OK.
     import os
     if os.path.isfile("backtest_statistics.csv"):
-        results_df.to_csv("backtest_statistics.csv", 
+        results_df.to_csv("stock_data\\backtest_statistics.csv", 
                           mode='a', 
                           header=False)
     else:
-        results_df.to_csv("backtest_statistics.csv")
+        results_df.to_csv("stock_data\\backtest_statistics.csv")
 
 
 # ==============================================================================
@@ -709,7 +709,7 @@ for i in thread_list:
 # Cell 30
 # ==============================================================================
 
-results_df = pd.read_csv('backtest_statistics.csv', index_col=0)
+results_df = pd.read_csv('stock_data\\backtest_statistics.csv', index_col=0)
 results_df.reset_index(inplace=True, drop=True)
 results_df
 
@@ -928,7 +928,7 @@ for model in model_pipeline_list:
             results_df2['Annual Volatility'].tail(tests_per_model).mean()))
 
 # Save our results for plotting
-results_df2.to_csv("Backtest_statistics_Modified_test_size1.csv")
+results_df2.to_csv("stock_data\\Backtest_statistics_Modified_test_size1.csv")
 
 
 # ==============================================================================
@@ -994,19 +994,19 @@ def pickStockForMe():
     Outputs a DataFrame of best picks.
     '''
     # Training X and Y of all previous year data
-    X=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios.csv", 
+    X=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios.csv", 
                   index_col=0)
     # annual stock performances
-    yperf=pd.read_csv("Annual_Stock_Price_Performance_Percentage.csv", 
+    yperf=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Percentage.csv", 
                       index_col=0)
     
     yperf=yperf["Perf"]
 
     # Stock selection ratios for 2024 X
-    X_2024=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios_2024.csv"
+    X_2024=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_2024.csv"
                        , index_col=0)
     # And the row tickers
-    tickers=pd.read_csv("Tickers_Dates_2024_present.csv", index_col=0)
+    tickers=pd.read_csv("stock_data\\Tickers_Dates_2024_present.csv", index_col=0)
     
     # Gradient Boosted tree
     #model_pl = traingbregressorModel(X, yperf)
