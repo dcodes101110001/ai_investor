@@ -177,7 +177,7 @@ def fixXRatios(X):
     X["Debt/Equity"] = X["Debt/Equity"].clip(0, 100)
     X["Debt Ratio"] = X["Debt Ratio"].clip(0, 50)  
     X["Cash Ratio"] = X["Cash Ratio"].clip(0, 30)
-    X["Gross Profit Margin"] = X["Gross Profit Margin"].clip(0, 1) #how can be >100%?
+#     X["Gross Profit Margin"] = X["Gross Profit Margin"].clip(0, 1) #how can be >100%?
     X["(CA-CL)/TA"] = X["(CA-CL)/TA"].clip(-1.5, 2)
     X["RE/TA"] = X["RE/TA"].clip(-20, 2)
     X["EBIT/TA"] = X["EBIT/TA"].clip(-2, 1)

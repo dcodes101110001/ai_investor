@@ -267,20 +267,21 @@ def filterStocks(maxBeta, maxPE):
     and returns a list of stocks that are below the maxBeta and maxPE values
     '''
     
-    filteredStocks = ? # Create an empty list to be appended to.
+#     filteredStocks = ? # Create an empty list to be appended to.
     
     for i, stock in enumerate(Stocks): # This counts i as 1, 2, 3, ... down the list of stocks
-        PriceEarningsBool = (PriceEarningsRatios[i] < ?) # returns True if our current PE is less than maxPE
+#         PriceEarningsBool = (PriceEarningsRatios[i] < ?) # returns True if our current PE is less than maxPE
         
-        ? = (Beta[i] < maxBeta) # returns True if our current beta is less than maxbeta
+#         ? = (Beta[i] < maxBeta) # returns True if our current beta is less than maxbeta
         
-        if (? & BetaBool):
-            filteredStocks.?(Stocks[i]) # with each loop, if conditions are met, append to the list.
-    return ? # Return the filtered Stocks
+#         if (? & BetaBool):
+#             filteredStocks.?(Stocks[i]) # with each loop, if conditions are met, append to the list.
+        pass  # Exercise placeholder
+#     return ? # Return the filtered Stocks
 
 # Try using this function
 maxBeta = 1.2 # Can try a bunch of numbers
 maxPE = 20 # Can try a bunch of numbers
 
 filteredStocks = filterStocks(maxBeta, maxPE)
-print('Accepted filtered stocks are:', ?)
+# print('Accepted filtered stocks are:', ?)

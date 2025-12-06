@@ -56,22 +56,12 @@ My First Title
 
 # You can also write equations like this: $x^2 + \frac{a}{27}$
 
-'''
-This code comment is between triple quotes.
-None of this text will be executed as code.
-
-Often this is used for explanations of functions,
-or other bodies of text that are best placed
-within the code.
-'''
-
-"""
-The quotes can be single or double quotes.
-They are interchangeable in Python,
-however they must match to end the quote.
-"""
-
-print("hello") # This however will be executed.
+# This code comment is between triple quotes.
+# None of this text will be executed as code.
+#
+# Often this is used for explanations of functions,
+# or other bodies of text that are best placed
+# within the code.
 
 # Using Numpy
 # Chapter 3 intro to Python functions. Here Numpy is imported for me to use the exponential and logarithmic functions.
@@ -112,10 +102,10 @@ my_age=32
 print('My age is: {}'.format( my_age-2 )   )
 
 # Make up strings for a, b and c
-a =
-b =
-c =
+# a =
+# b =
+# c =
 
 # Fix the code!
 # Print the concatenation of all 3 strings
-print(  ???   )
+# print(  ???   )

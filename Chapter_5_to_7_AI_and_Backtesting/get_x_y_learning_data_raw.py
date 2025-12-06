@@ -155,32 +155,7 @@ def getYPricesReportDateAndTargetDate(x, d, modifier=365):
         
     return y
 
-'''def getYPricesReportDateAndTargetDate(x, d, modifier=365):
-    '''
-    #Takes in all fundamental data X, all stock prices over time y,
-    #and modifier (days), and returns the stock price info for the
-    #data report date, as well as the stock price one year from that date
-    #(if modifier is left as modifier=365)
-    '''
-    # Preallocation list of list of 2 
-    # [(price at date) (price at date + modifier)]
-    y = [[None]*8 for i in range(len(x))] 
-    
-    whichDateCol='Publish Date'# or 'Report Date', 
-    # is the performance date from->to. Want this to be publish date.
-    
-    # Because of time lag between report date
-    # (which can't be actioned on) and publish date
-    # (data we can trade with)
-
-    for i in x.index:
-        y[i]=(getYPriceDataNearDate(x['Ticker'].loc[i], 
-                                    x[whichDateCol].loc[i],0,d)
-              +getYPriceDataNearDate(x['Ticker'].loc[i], 
-                                     x[whichDateCol].loc[i], 
-                                     modifier, d))
-        
-    return y'''
+# def getYPricesReportDateAndTargetDate(x, d, modifier=365):
 
 X = getXDataMerged()
 X.to_csv("Annual_Stock_Price_Fundamentals.csv")

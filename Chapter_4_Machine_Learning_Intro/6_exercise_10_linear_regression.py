@@ -108,15 +108,15 @@ Exercise 9 - Custom Linear Regression with 2 Feature Variables
 #
 # Some of the code is missing. Try and fix the code, replacing the ??? text.
 
-data = pd.???_csv('Exercise_10_StockReturnData.csv') # Read in our data
-data.head???) # Take a first look at the data with head
+# data = pd.???_csv('Exercise_10_StockReturnData.csv') # Read in our data
+# data.head???) # Take a first look at the data with head
 
 data.describe() # data seems OK
 
 data.hist(); # histograms seem OK
 
 y = data['Stock Performance'] # Split data into X and Y
-X = ???.drop(columns='Stock Performance')
+# X = ???.drop(columns='Stock Performance')
 
 # Plotting scatter plot to see if anything obvious can be seen.
 colors = cm.rainbow(np.linspace(0, 1, len(y)))
@@ -124,27 +124,27 @@ plt.scatter(X['P/E'], X['RoE'], color=colors) # Plot
 plt.xlabel('Price/Earnings')
 plt.ylabel('Return on Equity')
 plt.grid()
-plt.xlim([-30,???])
-plt.???lim([???,1]);
+# plt.xlim([-30,???])
+# plt.???lim([???,1]);
 # Nothing easily to identify visually.
 
-X_train, X_test, y_train, y_test = train_te???(X, ???, test_size=0.2)
+# X_train, X_test, y_train, y_test = train_te???(X, ???, test_size=0.2)
 
 # Simple linear regression Gradient Descent
 eta = 0.0002  # Learning Rate 0.0001 seems OK.
-iterations = ???  # The number of iterations to perform, 1000 seems OK.
+# iterations = ???  # The number of iterations to perform, 1000 seems OK.
 n = len(X_train) # Number of elements 
-beta0, beta1, ??? = 0, 0, 0 # start with random numbers
+# beta0, beta1, ??? = 0, 0, 0 # start with random numbers
 
 # Manually setting X1 and X2. Could put regression into a function if you wish.
 X1 = X_train['P/E']
-X2 = X_train[???]
+# X2 = X_train[???]
 
 # Performing Gradient Descent to find Beta values.
 for i in range(iterations): 
     beta0 = beta0 - eta * (2/n) * sum(beta0 + beta1*X1 + beta2*X2 - y_train)
-    beta1 = beta1 - ??? * (2/n) * sum((beta0 + beta1*??? + beta2*X2 - ???) * X1)
-    beta2 = beta2 - eta * (2/n) * sum((beta0 + beta1*X1 + beta2*??? - y_train) * X2)
+#     beta1 = beta1 - ??? * (2/n) * sum((beta0 + beta1*??? + beta2*X2 - ???) * X1)
+#     beta2 = beta2 - eta * (2/n) * sum((beta0 + beta1*X1 + beta2*??? - y_train) * X2)
 
 y_pred = beta0 + beta1 * X1 + beta2 * X2 # Do the prediction
 print('Final values of Beta0, Beta1 and Beta2 are:', beta0, beta1, beta2) # Make sure not crazy numbers
@@ -179,23 +179,22 @@ print('Predicted Stock Return P/E of 2 and RoE of 100% is:\n',
 
 # 7% as a prediction kind of sucks, but it is at least positive.
 # Try P/E of 100 and a RoE of 10%, this kind of stock should do badly.
-stock_return_pred = predictReturn(???, 0.1, beta0, beta1, beta2)
+# stock_return_pred = predictReturn(???, 0.1, beta0, beta1, beta2)
 print('Predicted Stock Return P/E of 100 and RoE of 10% is:\n', 
       round(stock_return_pred*100,2),
       '%')
 
-'''
-2% return is quite low for a stock return.
-Bear in mind that we have less than 100 rows of data to work with. 
-
-Our regression algorithm generally predicts things in the right direction, 
-we expect a low P/E stock with high Return on Equity to perform better.
-
-Also bear in mind that only beta0, 1 and 2 are changing, 
-by their nature they will not capture many relationships in the data.
-
-We'll use learning curves with Scikit-Learn linear regressors next.
-''';
+# 2% return is quite low for a stock return.
+# Bear in mind that we have less than 100 rows of data to work with. 
+#
+# Our regression algorithm generally predicts things in the right direction, 
+# we expect a low P/E stock with high Return on Equity to perform better.
+#
+# Also bear in mind that only beta0, 1 and 2 are changing, 
+# by their nature they will not capture many relationships in the data.
+#
+# We'll use learning curves with Scikit-Learn linear regressors next.
+# ''';
 
 """
 Linear Regression Regularisation

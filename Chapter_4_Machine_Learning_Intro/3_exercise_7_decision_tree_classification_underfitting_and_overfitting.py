@@ -251,29 +251,12 @@ Exercise 7 on Decision Trees
 # Oh no, Toby has messed up the code again. Try and get it working,
 # I think some code is missing where "?" is placed.
 
-'''
-Here we want to plot the prediction accuracy with increasing decision tree depth
-We want two accuracy lines plotted, one for accuracy vs. the testing set and
-one for the accuracy vs the training set. 
-
-We want to plot the tree depth from 1 to about 20.
-We will loop through possible tree depth numbers, fitting our model with a different
-tree depth with each loop, and appending the accuracy result to a list.
-
-We will plot the list at the end.
-'''
-
-
-scores_train, scores_test = [], ?
-level = 20
-for i in range(1, ?):
-    tree_clf = DecisionTreeClassifier(max_depth=?) # create a DecisionTreeClassifier object first
-    tree_clf.fit(?, y_train) # Fit the decision tree to our training data of X and Y.
-    scores_train.append(?, y_train))
-    scores_test.?(accuracy_score(tree_clf.predict(X_test), y_test)
-
-plt.plot(range(1,level), scores_, range(1,?), scores_)
-plt.legend(('Accuracy on Training Set','Accuracy on Testing Set'))
-plt.grid()
-#plt.xlabel('Decision Tree Depth')
-plt.ylabel('Prediction Accuracy')
+# Here we want to plot the prediction accuracy with increasing decision tree depth
+# We want two accuracy lines plotted, one for accuracy vs. the testing set and
+# one for the accuracy vs the training set. 
+#
+# We want to plot the tree depth from 1 to about 20.
+# We will loop through possible tree depth numbers, fitting our model with a different
+# tree depth with each loop, and appending the accuracy result to a list.
+#
+# We will plot the list at the end.

@@ -211,35 +211,18 @@ Income_Data.describe() # See some statistics about income statement data.
 
 stock_prices.describe() # See some statistics about stock price data.
 
-'''
-We can understand a lot about the stock market with this data with some plots
-Feel free to try different plots
-
-Here I'm plotting the SG&A expense vs. the gross profit. 
-We expect some kind of relationship between these.
-'''
-
-Income_Data.plot.scatter(x = 'Selling, General & Administrative', y = 'Gross Profit')
-plt.grid()
+# We can understand a lot about the stock market with this data with some plots
+# Feel free to try different plots
+#
+# Here I'm plotting the SG&A expense vs. the gross profit. 
+# We expect some kind of relationship between these.
 
 # Exploring Some Companies From The Data
 
-'''
-Notice int he last plot that there is one company with a crazy high gross profit, 
-yet having a very low SG&A spend, relatively speaking.
-
-Any guesses for which company this is? And what year? Let's find out.
-'''
-
-Income_Data[['Ticker',
-            'Currency',
-            'Fiscal Year', 
-            'Report Date',
-            'Publish Date',
-            'Restated Date',
-            'Net Income',
-            'Selling, General & Administrative',
-            'Gross Profit']].sort_values(by='Gross Profit', ascending=False).head(10)
+# Notice int he last plot that there is one company with a crazy high gross profit, 
+# yet having a very low SG&A spend, relatively speaking.
+#
+# Any guesses for which company this is? And what year? Let's find out.
 
 # Not really surprising that it's Amazon, and that the top 10 includes Wall Mart and Apple.
 
@@ -269,23 +252,22 @@ Income_Data[Income_Data['Ticker']=='WMT'].plot.bar(x='Report Date',
 
 # Working Out A Market Capitalisation Figure Manually
 
-'''
-In fundamentals investing, you'll want an idea of the valuation of a company
-relative to something else, e.g. the earnings, or the value of the assets.
-This would be reflected in ratios like the Price/Earnings ratio, etc.
-This requires a Market Cap figure, which we don't have currently.
-
-We'll work out a market cap figure here manually, in the process trying out some pandas functions.
-
-We'll do this for 2020 only, and to do it we will take the number of shares outstanding,
-and multiply this by the share price at the time.
-
-Bear in mind that the share prices and number of shares outstanding change over time,
-so this market cap figure and any ratios derived from it will be rough numbers.
-
-Another limitation is that there might not be a stock price reported for that specific day
-and we aren't finding the closest days price to use at this point (we will do later).
-''';
+# In fundamentals investing, you'll want an idea of the valuation of a company
+# relative to something else, e.g. the earnings, or the value of the assets.
+# This would be reflected in ratios like the Price/Earnings ratio, etc.
+# This requires a Market Cap figure, which we don't have currently.
+#
+# We'll work out a market cap figure here manually, in the process trying out some pandas functions.
+#
+# We'll do this for 2020 only, and to do it we will take the number of shares outstanding,
+# and multiply this by the share price at the time.
+#
+# Bear in mind that the share prices and number of shares outstanding change over time,
+# so this market cap figure and any ratios derived from it will be rough numbers.
+#
+# Another limitation is that there might not be a stock price reported for that specific day
+# and we aren't finding the closest days price to use at this point (we will do later).
+# ''';
 
 # Get the date format set correctly.
 Income_Data['Publish Date']=pd.to_datetime(Income_Data['Publish Date'])
@@ -368,14 +350,12 @@ stock_data_2019[['Ticker',
                 'Market Cap']].sort_values(by=['Market Cap'], 
                                              ascending=False).head(10)
 
-'''
-It's no surprise that AAPL and AMZN are present, 
-earlier we found that they had the largest gross profits.
-
-When picking stocks with fundamentals we would like the most bang/buck.
-
-Let's create a P/E ratio, and find some stocks using that.
-'''
+# It's no surprise that AAPL and AMZN are present, 
+# earlier we found that they had the largest gross profits.
+#
+# When picking stocks with fundamentals we would like the most bang/buck.
+#
+# Let's create a P/E ratio, and find some stocks using that.
 
 # Creating a P/E ratio, here we have clipped the result to +=1000.
 stock_data_2019['P/E'] = (stock_data_2019['Market Cap']/stock_data_2019['Net Income']).clip(-1000,1000)
@@ -423,9 +403,9 @@ Income_Data[Income_Data['Ticker']=='RHE'].plot.bar(x='Report Date',
 Pandas Data Reader
 """
 
-!pip install yfinance --upgrade --no-cache-dir
+# !pip install yfinance --upgrade --no-cache-dir
 
-pip install git+https://github.com/ranaroussi/yfinance.git@hotfix/download-database-error
+# pip install git+https://github.com/ranaroussi/yfinance.git@hotfix/download-database-error
 
 def get_data_yahoo(Ticker, start, end):
     stock = yf.Ticker(Ticker)

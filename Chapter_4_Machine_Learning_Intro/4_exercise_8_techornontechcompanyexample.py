@@ -418,7 +418,7 @@ for i in data['Ticker_x'].unique(): print(i)
 
 nonTechCompany = data[data['Ticker_x']=='MCD'] #MCD, KO, OXY, CROX, NKE, etc.
 
-clf.predict(createMyRatios(nonTechCompany)) # Tech Company?
+# clf.predict(createMyRatios(nonTechCompany)) # Tech Company?
 
 # Examples tech companies:
 # AAPL https://investor.apple.com/investor-relations/default.aspx
@@ -429,10 +429,10 @@ clf.predict(createMyRatios(nonTechCompany)) # Tech Company?
 
 techCompany = data[data['Ticker_x']=='PETS'] #AAPL, MSFT, AMD, GOOG, TSLA, etc.
 
-clf.predict(createMyRatios(techCompany)) # Tech Company?
+# clf.predict(createMyRatios(techCompany)) # Tech Company?
 
 # Try changing the max_depth Hyperparameter
 clf = DecisionTreeClassifier(random_state=42, 
                              max_depth=4).fit(data2, targets)
 techCompany = data[data['Ticker_x']=='AAPL'] #AAPL
-clf.predict(createMyRatios(techCompany)) # Tech Company?
+# clf.predict(createMyRatios(techCompany)) # Tech Company?

@@ -211,29 +211,29 @@ def calcDCF(discRate, growthRate, currentFcf, numYears, startYear):
     '''
     
     # Start zero arrays and fill the array with a loop.
-    futureCashF???s = np.zeros(numY????)
-    futureDiscCashFlows = np.???os(numYears)
+#     futureCashF???s = np.zeros(numY????)
+#     futureDiscCashFlows = np.???os(numYears)
     
     # Now fill the array with a loop
-    for i in ra???(0, numYears):
-        futureCashFlows[i] = currentFcf * (growthRate+1) ** i
-        futureDiscCashFlows[i] = futureCashFlows[i]/((1+discRate)**i)
+#     for i in ra???(0, numYears):
+#         futureCashFlows[i] = currentFcf * (growthRate+1) ** i
+#         futureDiscCashFlows[i] = futureCashFlows[i]/((1+discRate)**i)
     
     # Have an array for the future years, from say, 2020 to 2020 + numYears
-    futureYears = np.ar???(ra???(startYear, startYear+numYears))
+#     futureYears = np.ar???(ra???(startYear, startYear+numYears))
     
     # Return the arrays of: future cash flows
     # Future discounted Cash Flows
     # Future years that those cash flowws occur in
-    return [futureC???Flows, fut???DiscCashFlows, futureY????]
+#     return [futureC???Flows, fut???DiscCashFlows, futureY????]
 
 # Run the function
 # Feel free to change the function arguments and see how they impact the valuation
-[futureCashFlows, futureDiscCashFlows, futureYears] = calcDCF(discRate=0.???, 
-                                                              growthRate=0.05, 
-                                                              currentFcf=19000, 
-                                                              numYears=???, 
-                                                              startYear=2020)
+# [futureCashFlows, futureDiscCashFlows, futureYears] = calcDCF(discRate=0.???, 
+#                                                               growthRate=0.05, 
+#                                                               currentFcf=19000, 
+#                                                               numYears=???, 
+#                                                               startYear=2020)
 
 # plot the past cash flows, future cash flows, 
 # and discounted future cash flows on a graph.

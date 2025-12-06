@@ -114,10 +114,10 @@ listOfBestLists = ['NYT best-sellers list', 'Santas list', 'Bucket list', 'Lloyd
 # One of these lists is not in fact a list. Either remove it or substitute it with your own list.
 
 # Print out the last item in the list:
-print(listOfBestLists[?])
+# print(listOfBestLists[?])
 
 # You can actually print out the second last item by asking for item -2.
-print(listOfBestLists[?])
+# print(listOfBestLists[?])
 
 # You know you can access a range with the colon:, this quite versatile as you can leave a number out to slice lists.
 first_two_items = listOfBestLists[:2]
@@ -132,13 +132,13 @@ print(item1,',', item2)
 
 list_1 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 # Print out the first 5 items
-print(list_1[?])
+# print(list_1[?])
 
 # Print out the last 3 items
-print(list_1[?])
+# print(list_1[?])
 
 # Print out items 3 to 6
-print(list_1[?])
+# print(list_1[?])
 
 # All Set?
 # Some code is missing, try fill it out to get it working again
@@ -147,23 +147,23 @@ print(list_1[?])
 friends_stock_list = ['F', 'AMD', 'GAW', 'TM17', 'DISH']
 
 # My friend added MSFT and AMZN stocks to his portfolio yesterday, make a list of those stocks.
-stocks_added_yesterday = ?
+# stocks_added_yesterday = ?
 
 # Combine both lists together to update his list oh current holdings.
-friends_stock_list = friends_stock_list + ?
+# friends_stock_list = friends_stock_list + ?
 
 # He realises the list is incorrect, he sold Ford a sold long ago. correct the list by removing 'F'
-friends_stock_list.?
+# friends_stock_list.?
 
 # His sister also holds some stocks, here is the list of them:
 sisters_stocks_list = ['DIS', 'TM17', 'MMM', 'AMD']
 
 # We want to see what stocks they have in common (I know it's not many, imagine they contain 40+ each). 
 # for each list create a corresponding set, and find their intersection.
-friends_stock_set = ?
-sisters_stocks_set = ?
+# friends_stock_set = ?
+# sisters_stocks_set = ?
 
 #print('Their common holdings are: ', friends_stock_set.?(sisters_stocks_set))
 
 # Let's see a complete set of all their holdings.
-print('Their total holdings are: ', friends_stock_set.?(sisters_stocks_set))
+# print('Their total holdings are: ', friends_stock_set.?(sisters_stocks_set))

@@ -177,15 +177,14 @@ print('Predicted Stock Return P/E of 100 and RoE of 10% is:\n',
       round(stock_return_pred*100,2),
       '%')
 
-'''
-2% return is quite low for a stock return.
-Bear in mind that we have less than 100 rows of data to work with. 
-
-Our regression algorithm generally predicts things in the right direction, 
-we expect a low P/E stock with high Return on Equity to perform better.
-
-Also bear in mind that only beta0, 1 and 2 are changing, 
-by their nature they will not capture many relationships in the data.
-
-We'll use learning curves with Scikit-Learn linear regressors next.
-''';
+# 2% return is quite low for a stock return.
+# Bear in mind that we have less than 100 rows of data to work with. 
+#
+# Our regression algorithm generally predicts things in the right direction, 
+# we expect a low P/E stock with high Return on Equity to perform better.
+#
+# Also bear in mind that only beta0, 1 and 2 are changing, 
+# by their nature they will not capture many relationships in the data.
+#
+# We'll use learning curves with Scikit-Learn linear regressors next.
+# ''';
