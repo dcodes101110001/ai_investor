@@ -29,13 +29,6 @@ try:
 except ImportError:
     SIMFIN_AVAILABLE = False
 
-# Try to import requests for better error handling
-try:
-    import requests
-    REQUESTS_AVAILABLE = True
-except ImportError:
-    REQUESTS_AVAILABLE = False
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -116,7 +109,7 @@ def download_with_retry(load_func, dataset_name, max_retries=5, initial_delay=2,
                 logger.info(f"Retrying in {delay} seconds... (attempt {attempt + 2}/{max_retries + 1})")
                 time.sleep(delay)
                 
-                # Exponential backoff with jitter
+                # Exponential backoff
                 delay = min(delay * 2, max_delay)
             else:
                 # Non-retryable error or max retries exhausted
