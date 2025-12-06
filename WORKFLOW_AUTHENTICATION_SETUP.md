@@ -98,12 +98,12 @@ This workflow supports **two authentication methods**. Choose the one that best 
 2. **Add the token as a Secret**:
    - Go to your repository: **Settings** → **Secrets and variables** → **Actions**
    - Click **New repository secret**
-   - Name: `GITHUB_PAT`
+   - Name: `GIT_PAT`
    - Value: Paste your Personal Access Token
    - Click **Add secret**
 
 3. **Verify the Setup**:
-   - The workflow will now automatically use GITHUB_PAT when pushing changes
+   - The workflow will now automatically use GIT_PAT when pushing changes
    - Run the workflow manually to test: **Actions** → **Download SimFin Data** → **Run workflow**
    - Check the logs for: "✓ Personal Access Token configured successfully"
 
@@ -135,7 +135,7 @@ By default, the workflow pushes data updates to a branch called `data-updates`. 
 The workflow checks for authentication in this order:
 
 1. If `USE_SSH_AUTH=true` and `SSH_DEPLOY_KEY` exists → Use SSH
-2. If `GITHUB_PAT` exists → Use Personal Access Token
+2. If `GIT_PAT` exists → Use Personal Access Token
 3. Otherwise → Fall back to default `GITHUB_TOKEN` (limited permissions on forks)
 
 ### Branch Strategy
@@ -183,7 +183,7 @@ Check the workflow logs for:
 
 #### Issue: Still getting "can not upload new objects to public fork"
 **Solution:**
-- Verify that either `SSH_DEPLOY_KEY` or `GITHUB_PAT` secret exists
+- Verify that either `SSH_DEPLOY_KEY` or `GIT_PAT` secret exists
 - Check workflow logs to confirm authentication method was used
 - Ensure the secret values are correct
 

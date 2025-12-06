@@ -9,7 +9,7 @@ If you see this error in your workflow runs:
 @github-actions[bot] can not upload new objects to public fork
 ```
 
-You need to configure a GitHub Personal Access Token (PAT).
+You need to configure a GitHub Personal Access Token (PAT) stored as `GIT_PAT`.
 
 ## 🚀 Setup Steps (5 minutes)
 
@@ -35,7 +35,7 @@ You need to configure a GitHub Personal Access Token (PAT).
 2. Click: **Settings** → **Secrets and variables** → **Actions**
 3. Click: **"New repository secret"**
 4. Enter:
-   - **Name**: `GITHUB_PAT`
+   - **Name**: `GIT_PAT`
    - **Secret**: (paste the token you copied)
 5. Click: **"Add secret"**
 
@@ -50,7 +50,7 @@ You need to configure a GitHub Personal Access Token (PAT).
 
 You'll know it's working when you see:
 ```
-✓ GITHUB_PAT secret found
+✓ GIT_PAT secret found
 ✓ Personal Access Token configured successfully
 ✓ Authentication ready for Git LFS push operations
 ✓ Changes pushed successfully to branch: data-updates
@@ -59,18 +59,18 @@ You'll know it's working when you see:
 ## ❌ Common Issues
 
 ### Issue: Token expired
-**Solution**: Create a new token following Step 1 above, then update the `GITHUB_PAT` secret
+**Solution**: Create a new token following Step 1 above, then update the `GIT_PAT` secret
 
 ### Issue: Still getting permission error
 **Checklist**:
-- [ ] Secret is named exactly `GITHUB_PAT` (case-sensitive)
+- [ ] Secret is named exactly `GIT_PAT` (case-sensitive)
 - [ ] Token has both `repo` AND `workflow` scopes
 - [ ] No extra spaces when copying/pasting token
 - [ ] Token hasn't expired
 
 ### Issue: Need to update existing token
 1. Go to repository **Settings** → **Secrets and variables** → **Actions**
-2. Click the pencil icon next to `GITHUB_PAT`
+2. Click the pencil icon next to `GIT_PAT`
 3. Paste new token
 4. Click **"Update secret"**
 
