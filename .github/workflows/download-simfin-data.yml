@@ -606,14 +606,18 @@ jobs:
                 
                 # Combine all parts into the original filename
                 # Sort ensures proper numerical order (part000, part001, ..., part010, ...)
-                # The -V option does natural/version sort which handles numbers correctly
-                find "$dirname" -name "$(basename "$original_file").part*" | sort -V | xargs cat > "$original_file"
+                # Use -print0 and -0 to handle filenames with spaces or special characters
+                find "$dirname" -name "$(basename "$original_file").part*" -print0 | sort -zV | xargs -0 cat > "$original_file"
                 
                 # Verify the combined file was created
                 if [ -f "$original_file" ]; then
                   # Use stat -c%s for Linux (GitHub Actions uses Ubuntu)
-                  combined_size=$(stat -c%s "$original_file" 2>/dev/null || echo "unknown")
-                  echo "✓ Combined file created: $filename (size: $combined_size bytes)"
+                  combined_size=$(stat -c%s "$original_file" 2>/dev/null)
+                  if [ -n "$combined_size" ]; then
+                    echo "✓ Combined file created: $filename (size: $combined_size bytes)"
+                  else
+                    echo "✓ Combined file created: $filename"
+                  fi
                 else
                   echo "❌ Failed to create combined file: $filename"
                   exit 1
@@ -645,7 +649,7 @@ jobs:
           
           # Copy only the combined CSV files (not .part* files) to temp directory
           echo "Copying combined CSV files to temporary directory..."
-          find stock_data -type f -name "*.csv" ! -name "*.part*" -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
+          find stock_data -type f -name "*.csv" -not -name "*.part*" -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
           
           # Count the files copied
           file_count=$(find "$TEMP_DIR" -type f -name "*.csv" 2>/dev/null | wc -l)
@@ -682,10 +686,15 @@ jobs:
           
           # Copy combined files to stock_data directory on main branch
           echo "Copying combined CSV files to main branch stock_data directory..."
-          cp "$TEMP_DIR"/*.csv stock_data/ 2>/dev/null || {
-            echo "❌ Failed to copy files to stock_data directory"
-            exit 1
-          }
+          if [ "$file_count" -gt 0 ]; then
+            find "$TEMP_DIR" -type f -name "*.csv" -exec cp {} stock_data/ \; || {
+              echo "❌ Failed to copy files to stock_data directory"
+              exit 1
+            }
+            echo "✓ Copied $file_count CSV files to stock_data directory"
+          else
+            echo "⚠️ No files to copy"
+          fi
           
           # Check if there are changes to commit
           git add stock_data/
@@ -752,11 +761,11 @@ jobs:
           # Remove combined files from working directory to avoid confusion
           # (They were only needed for pushing to main branch)
           echo "Removing combined CSV files from working directory..."
-          combined_files=$(find stock_data -type f -name "*.csv" ! -name "*.part*" 2>/dev/null || true)
+          combined_files=$(find stock_data -type f -name "*.csv" -not -name "*.part*" 2>/dev/null || true)
           if [ -n "$combined_files" ]; then
             echo "Files to remove:"
             echo "$combined_files"
-            find stock_data -type f -name "*.csv" ! -name "*.part*" -delete 2>/dev/null || true
+            find stock_data -type f -name "*.csv" -not -name "*.part*" -delete 2>/dev/null || true
             echo "✓ Combined files removed from working directory"
           else
             echo "No combined files to remove"
