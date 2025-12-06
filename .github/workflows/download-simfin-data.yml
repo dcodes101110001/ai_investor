@@ -15,7 +15,7 @@
 #      - Your SimFin API key for data access
 #      - Get it from: https://simfin.com/
 # 
-#   2. GITHUB_PAT (required for public forks)
+#   2. GIT_PAT (required for public forks)
 #      - Personal Access Token with 'repo' and 'workflow' scopes
 #      - Required for pushing Git LFS data to public forks
 #      - Setup instructions in the "Setup Personal Access Token" step below
@@ -197,7 +197,7 @@ jobs:
       # 4. Set USE_SSH_AUTH=true in repository variables
       # 
       # This step only runs if USE_SSH_AUTH variable is set to 'true'
-      # Otherwise, the workflow uses GITHUB_PAT (see "Setup Personal Access Token" step below)
+      # Otherwise, the workflow uses GIT_PAT (see "Setup Personal Access Token" step below)
       # 
       - name: Setup SSH Deploy Key (if available)
         if: steps.check_changes.outputs.has_changes == 'true' && vars.USE_SSH_AUTH == 'true'
@@ -230,7 +230,7 @@ jobs:
             echo "  2. Disable SSH authentication:"
             echo "     → Go to: Repository Settings → Secrets and variables → Actions → Variables tab"
             echo "     → Find 'USE_SSH_AUTH' and delete it (or set value to 'false')"
-            echo "     → Then add GITHUB_PAT secret instead"
+            echo "     → Then add GIT_PAT secret instead"
             echo ""
             exit 1
           fi
@@ -281,13 +281,13 @@ jobs:
       # - Error without proper auth: "@github-actions[bot] can not upload new objects to public fork"
       # - The downloaded data files (~400MB+) are tracked by Git LFS and require elevated permissions
       # 
-      # REQUIRED: GITHUB_PAT SECRET
+      # REQUIRED: GIT_PAT SECRET
       # ---------------------------
       # You MUST create a Personal Access Token (PAT) with the following scopes:
       #   ✓ repo (Full control of private repositories)
       #   ✓ workflow (Update GitHub Action workflows)
       # 
-      # HOW TO SET UP THE GITHUB_PAT SECRET:
+      # HOW TO SET UP THE GIT_PAT SECRET:
       # 1. Create a Personal Access Token:
       #    - Go to: https://github.com/settings/tokens
       #    - Click "Generate new token" → "Generate new token (classic)"
@@ -299,7 +299,7 @@ jobs:
       # 2. Add the token as a repository secret:
       #    - Go to: Repository Settings → Secrets and variables → Actions
       #    - Click "New repository secret"
-      #    - Name: GITHUB_PAT
+      #    - Name: GIT_PAT
       #    - Value: Paste your Personal Access Token
       #    - Click "Add secret"
       # 
@@ -314,21 +314,21 @@ jobs:
       - name: Setup Personal Access Token (if SSH not used)
         if: steps.check_changes.outputs.has_changes == 'true' && vars.USE_SSH_AUTH != 'true'
         env:
-          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
         run: |
-          if [ -n "$GITHUB_PAT" ]; then
-            echo "✓ GITHUB_PAT secret found"
+          if [ -n "$GIT_PAT" ]; then
+            echo "✓ GIT_PAT secret found"
             echo "Setting up Personal Access Token authentication..."
             
             # Configure Git to use the PAT for authentication
             # Format: https://x-access-token:TOKEN@github.com/OWNER/REPO.git
             # Note: GitHub automatically masks the token in logs for security
-            git remote set-url origin "https://x-access-token:${GITHUB_PAT}@github.com/${{ github.repository }}.git"
+            git remote set-url origin "https://x-access-token:${GIT_PAT}@github.com/${{ github.repository }}.git"
             
             echo "✓ Personal Access Token configured successfully"
             echo "✓ Authentication ready for Git LFS push operations"
           else
-            echo "❌ ERROR: GITHUB_PAT secret not found!"
+            echo "❌ ERROR: GIT_PAT secret not found!"
             echo ""
             echo "═══════════════════════════════════════════════════════════════"
             echo "  AUTHENTICATION REQUIRED FOR GIT LFS ON PUBLIC FORKS"
@@ -337,7 +337,7 @@ jobs:
             echo "This workflow cannot push Git LFS data without proper authentication."
             echo "The default GITHUB_TOKEN has insufficient permissions on public forks."
             echo ""
-            echo "Please set up a GITHUB_PAT secret with the following scopes:"
+            echo "Please set up a GIT_PAT secret with the following scopes:"
             echo "  • repo (Full control of private repositories)"
             echo "  • workflow (Update GitHub Action workflows)"
             echo ""
@@ -352,7 +352,7 @@ jobs:
             echo "2. Add as Repository Secret:"
             echo "   → Go to: Repository Settings → Secrets and variables → Actions"
             echo "   → Click: New repository secret"
-            echo "   → Name: GITHUB_PAT"
+            echo "   → Name: GIT_PAT"
             echo "   → Value: (paste your token)"
             echo ""
             echo "3. Re-run this workflow"
@@ -370,7 +370,7 @@ jobs:
       - name: Validate authentication setup
         if: steps.check_changes.outputs.has_changes == 'true'
         env:
-          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
           SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
           USE_SSH: ${{ vars.USE_SSH_AUTH }}
         run: |
@@ -391,8 +391,8 @@ jobs:
           fi
           
           # Check if PAT authentication is configured
-          if [ -n "$GITHUB_PAT" ]; then
-            echo "✓ Personal Access Token (GITHUB_PAT) configured"
+          if [ -n "$GIT_PAT" ]; then
+            echo "✓ Personal Access Token (GIT_PAT) configured"
             echo "✓ Ready to push with elevated permissions"
             exit 0
           fi
@@ -401,7 +401,7 @@ jobs:
           echo "❌ ERROR: No valid authentication configured!"
           echo ""
           echo "This workflow requires either:"
-          echo "  1. GITHUB_PAT secret (recommended for public forks)"
+          echo "  1. GIT_PAT secret (recommended for public forks)"
           echo "  2. SSH_DEPLOY_KEY secret + USE_SSH_AUTH=true variable"
           echo ""
           echo "The default GITHUB_TOKEN cannot push Git LFS data to public forks."
@@ -463,26 +463,26 @@ jobs:
                 echo "═══════════════════════════════════════════════════════════════"
                 echo ""
                 echo "Common causes:"
-                echo "  • Missing or invalid GITHUB_PAT secret"
+                echo "  • Missing or invalid GIT_PAT secret"
                 echo "  • PAT lacks required scopes (repo, workflow)"
                 echo "  • PAT has expired"
                 echo "  • Network connectivity issues"
                 echo "  • Git LFS quota exceeded"
                 echo ""
                 echo "If you see: '@github-actions[bot] can not upload new objects'"
-                echo "  → This means GITHUB_PAT is not configured or invalid"
+                echo "  → This means GIT_PAT is not configured or invalid"
                 echo ""
                 echo "SOLUTION:"
                 echo "----------"
-                echo "1. Verify GITHUB_PAT secret exists:"
+                echo "1. Verify GIT_PAT secret exists:"
                 echo "   → Repository Settings → Secrets and variables → Actions"
-                echo "   → Should see 'GITHUB_PAT' in the list"
+                echo "   → Should see 'GIT_PAT' in the list"
                 echo ""
                 echo "2. If missing, create a new Personal Access Token:"
                 echo "   → Visit: https://github.com/settings/tokens"
                 echo "   → Generate new token (classic)"
                 echo "   → Select scopes: ✓ repo, ✓ workflow"
-                echo "   → Add as GITHUB_PAT secret in repository settings"
+                echo "   → Add as GIT_PAT secret in repository settings"
                 echo ""
                 echo "3. If exists but failing, check:"
                 echo "   → Token hasn't expired (check expiration date)"

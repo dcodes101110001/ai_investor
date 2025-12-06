@@ -29,7 +29,7 @@ Implemented two authentication methods that users can choose from:
 
 #### B. Personal Access Token (PAT)
 - **Advantages**: Simpler setup, works across repositories
-- **Setup**: Generate PAT with `repo` and `workflow` scopes, store as `GITHUB_PAT` secret
+- **Setup**: Generate PAT with `repo` and `workflow` scopes, store as `GIT_PAT` secret
 - **Configuration**: Automatically used when SSH is not enabled
 
 ### 2. Dedicated Branch Strategy
@@ -134,7 +134,7 @@ Complete documentation of all changes, rationale, and implementation details.
 | Secret | Purpose | Required For | Format |
 |--------|---------|--------------|--------|
 | `SSH_DEPLOY_KEY` | Private SSH key | SSH authentication | Ed25519 private key |
-| `GITHUB_PAT` | Personal Access Token | PAT authentication | `ghp_...` token string |
+| `GIT_PAT` | Personal Access Token | PAT authentication | `ghp_...` token string |
 | `SIMFIN_API_KEY` | SimFin API access | Data download | SimFin API key |
 
 ### Workflow Permissions
@@ -166,7 +166,7 @@ permissions:
 ```
 1. Workflow checks for changes
 2. If changes exist AND USE_SSH_AUTH!=true:
-   a. Check for GITHUB_PAT secret
+   a. Check for GIT_PAT secret
    b. If found: Configure git remote with PAT URL
    c. If not found: Fall back to default GITHUB_TOKEN
 3. Commit changes to data branch

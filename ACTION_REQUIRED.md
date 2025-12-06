@@ -24,7 +24,7 @@ Because this is a **public fork**, GitHub restricts Git LFS uploads when using t
 1. Go to: **https://github.com/dcodes101110001/ai_investor/settings/secrets/actions**
 2. Click: **"New repository secret"**
 3. Enter:
-   - **Name**: `GITHUB_PAT` (must be exactly this)
+   - **Name**: `GIT_PAT` (must be exactly this)
    - **Secret**: (paste your token)
 4. Click: **"Add secret"**
 
@@ -39,7 +39,7 @@ Because this is a **public fork**, GitHub restricts Git LFS uploads when using t
 ### Step 4: Verify Success
 Check the workflow logs for these success messages:
 ```
-✓ GITHUB_PAT secret found
+✓ GIT_PAT secret found
 ✓ Personal Access Token configured successfully
 ✓ Authentication ready for Git LFS push operations
 ✓ Changes pushed successfully to branch: data-updates
@@ -53,7 +53,7 @@ The workflow now has detailed error messages. If it fails:
 1. Read the error message carefully - it includes fix steps
 2. Check [QUICK_SETUP_PAT.md](QUICK_SETUP_PAT.md) for troubleshooting
 3. Verify:
-   - Secret is named exactly `GITHUB_PAT` (case-sensitive)
+   - Secret is named exactly `GIT_PAT` (case-sensitive)
    - Token has both `repo` AND `workflow` scopes
    - Token hasn't expired
 
@@ -73,7 +73,7 @@ If you prefer SSH authentication:
 ## Timeline
 
 This PR is ready to merge once you've:
-1. ✅ Added the GITHUB_PAT secret
+1. ✅ Added the GIT_PAT secret
 2. ✅ Tested the workflow successfully
 3. ✅ Verified data is pushed to data-updates branch
 

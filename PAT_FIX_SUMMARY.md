@@ -13,7 +13,7 @@ This occurred because:
 - The repository is a **public fork** of the original ai_investor repository
 - Git LFS (Large File Storage) is used to track large CSV files (~400MB+)
 - GitHub restricts Git LFS uploads from forks when using the default `GITHUB_TOKEN`
-- Neither `GITHUB_PAT` nor `SSH_DEPLOY_KEY` secrets were configured
+- Neither `GIT_PAT` nor `SSH_DEPLOY_KEY` secrets were configured
 - The workflow lacked clear documentation on how to set up authentication
 
 ## Solution Implemented
@@ -23,7 +23,7 @@ This occurred because:
 #### Header Documentation (Lines 1-33)
 - Added comprehensive comments explaining:
   - Workflow purpose and schedule
-  - Required secrets (`SIMFIN_API_KEY`, `GITHUB_PAT`)
+  - Required secrets (`SIMFIN_API_KEY`, `GIT_PAT`)
   - Optional configuration variables (`DATA_BRANCH`, `USE_SSH_AUTH`)
   - Links to detailed documentation files
 
@@ -35,11 +35,11 @@ This occurred because:
 
 #### Personal Access Token Setup (Lines 236-364)
 - **65+ lines of inline documentation** explaining:
-  - Why GITHUB_PAT is needed (fork limitations + Git LFS)
+  - Why GIT_PAT is needed (fork limitations + Git LFS)
   - Required scopes (`repo`, `workflow`)
   - Complete step-by-step setup guide with URLs
   - Where to add the secret in repository settings
-- **Changed behavior**: Now **fails fast** if GITHUB_PAT is missing
+- **Changed behavior**: Now **fails fast** if GIT_PAT is missing
   - Previous: Would fall back to `GITHUB_TOKEN` (which fails for forks)
   - Current: Fails immediately with actionable error message
 - Clear error message with formatted setup instructions
@@ -55,7 +55,7 @@ This occurred because:
 #### Enhanced Push Error Messages (Lines 428-474)
 - Comprehensive troubleshooting guide when push fails
 - Specific guidance for common issues:
-  - Missing GITHUB_PAT secret
+  - Missing GIT_PAT secret
   - Token lacks required scopes
   - Token has expired
   - Network issues
@@ -153,9 +153,9 @@ Created a concise, user-friendly guide with:
 
 Since this is authentication configuration, the actual test requires the user to:
 
-1. **Add GITHUB_PAT Secret**:
+1. **Add GIT_PAT Secret**:
    - Create a Personal Access Token with `repo` and `workflow` scopes
-   - Add it as `GITHUB_PAT` secret in repository settings
+   - Add it as `GIT_PAT` secret in repository settings
 
 2. **Run Workflow Manually**:
    - Go to Actions → Download SimFin Data → Run workflow
@@ -238,4 +238,4 @@ The workflow now properly handles the public fork + Git LFS authentication requi
 **Implementation Status**: ✅ COMPLETE
 **Security Status**: ✅ VERIFIED (0 vulnerabilities)
 **Documentation Status**: ✅ COMPREHENSIVE
-**User Testing Status**: ⏳ PENDING (requires user to add GITHUB_PAT secret)
+**User Testing Status**: ⏳ PENDING (requires user to add GIT_PAT secret)
