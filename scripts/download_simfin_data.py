@@ -19,6 +19,7 @@ The script downloads:
 import os
 import sys
 import logging
+import time
 from pathlib import Path
 
 # Try to import simfin, but don't fail if it's not installed yet
@@ -61,9 +62,70 @@ def verify_directory(data_dir):
     return str(data_path.absolute())
 
 
+def download_with_retry(load_func, dataset_name, max_retries=5, initial_delay=2, max_delay=300):
+    """
+    Download data with exponential backoff retry logic for rate limiting.
+    
+    Args:
+        load_func: Function to call for loading data
+        dataset_name: Name of the dataset for logging
+        max_retries: Maximum number of retry attempts
+        initial_delay: Initial delay in seconds before first retry
+        max_delay: Maximum delay in seconds between retries
+        
+    Returns:
+        Downloaded dataframe
+        
+    Raises:
+        Exception: If all retries are exhausted or non-retryable error occurs
+    """
+    delay = initial_delay
+    last_exception = None
+    
+    for attempt in range(max_retries + 1):
+        try:
+            logger.info(f"Downloading {dataset_name}... (attempt {attempt + 1}/{max_retries + 1})")
+            df = load_func()
+            logger.info(f"✓ {dataset_name}: {len(df)} rows downloaded")
+            return df
+            
+        except Exception as e:
+            last_exception = e
+            error_str = str(e)
+            
+            # Check if this is a rate limit error (429)
+            is_rate_limit = ('429' in error_str or 
+                           'rate limit' in error_str.lower() or
+                           'too many requests' in error_str.lower())
+            
+            # Check if this is a server error (5xx) that might be transient
+            is_server_error = any(code in error_str for code in ['500', '502', '503', '504'])
+            
+            # Determine if we should retry
+            should_retry = is_rate_limit or is_server_error
+            
+            if should_retry and attempt < max_retries:
+                logger.warning(f"⚠ {dataset_name} download failed with error: {error_str}")
+                logger.info(f"Retrying in {delay} seconds... (attempt {attempt + 2}/{max_retries + 1})")
+                time.sleep(delay)
+                
+                # Exponential backoff
+                delay = min(delay * 2, max_delay)
+            else:
+                # Non-retryable error or max retries exhausted
+                if attempt >= max_retries:
+                    logger.error(f"✗ Max retries ({max_retries}) exhausted for {dataset_name}")
+                else:
+                    logger.error(f"✗ Non-retryable error for {dataset_name}: {error_str}")
+                raise
+    
+    # Should not reach here, but raise the last exception if we do
+    raise last_exception
+
+
 def download_simfin_data(api_key, data_dir):
     """
-    Download SimFin data using the SimFin Python API.
+    Download SimFin data using the SimFin Python API with retry logic.
     
     Args:
         api_key: SimFin API key for authentication
@@ -84,7 +146,7 @@ def download_simfin_data(api_key, data_dir):
         sf.set_data_dir(data_dir)
         logger.info(f"✓ SimFin configured with data directory: {data_dir}")
         
-        # Download datasets
+        # Download datasets with retry logic
         datasets = [
             ('US Income Statements (Annual)', lambda: sf.load_income(variant='annual', market='us')),
             ('US Balance Sheets (Annual)', lambda: sf.load_balance(variant='annual', market='us')),
@@ -94,11 +156,9 @@ def download_simfin_data(api_key, data_dir):
         
         for dataset_name, load_func in datasets:
             try:
-                logger.info(f"Downloading {dataset_name}...")
-                df = load_func()
-                logger.info(f"✓ {dataset_name}: {len(df)} rows downloaded")
+                download_with_retry(load_func, dataset_name)
             except Exception as e:
-                logger.error(f"✗ Failed to download {dataset_name}: {str(e)}")
+                logger.error(f"✗ Failed to download {dataset_name} after all retries: {str(e)}")
                 raise
         
         logger.info("=" * 60)
