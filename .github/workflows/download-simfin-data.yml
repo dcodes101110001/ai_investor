@@ -605,12 +605,14 @@ jobs:
                 echo "Combining parts for: $filename"
                 
                 # Combine all parts into the original filename
-                # This will cat all .part* files in order (part000, part001, part002, etc.)
-                cat "${original_file}".part* > "$original_file"
+                # Sort ensures proper numerical order (part000, part001, ..., part010, ...)
+                # The -V option does natural/version sort which handles numbers correctly
+                find "$dirname" -name "$(basename "$original_file").part*" | sort -V | xargs cat > "$original_file"
                 
                 # Verify the combined file was created
                 if [ -f "$original_file" ]; then
-                  combined_size=$(stat -f%z "$original_file" 2>/dev/null || stat -c%s "$original_file" 2>/dev/null || echo "unknown")
+                  # Use stat -c%s for Linux (GitHub Actions uses Ubuntu)
+                  combined_size=$(stat -c%s "$original_file" 2>/dev/null || echo "unknown")
                   echo "✓ Combined file created: $filename (size: $combined_size bytes)"
                 else
                   echo "❌ Failed to create combined file: $filename"
@@ -750,7 +752,15 @@ jobs:
           # Remove combined files from working directory to avoid confusion
           # (They were only needed for pushing to main branch)
           echo "Removing combined CSV files from working directory..."
-          find stock_data -type f -name "*.csv" ! -name "*.part*" -delete 2>/dev/null || true
+          combined_files=$(find stock_data -type f -name "*.csv" ! -name "*.part*" 2>/dev/null || true)
+          if [ -n "$combined_files" ]; then
+            echo "Files to remove:"
+            echo "$combined_files"
+            find stock_data -type f -name "*.csv" ! -name "*.part*" -delete 2>/dev/null || true
+            echo "✓ Combined files removed from working directory"
+          else
+            echo "No combined files to remove"
+          fi
           
           # Switch back to data branch
           echo "Switching back to $DATA_BRANCH branch..."
