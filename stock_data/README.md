@@ -2,7 +2,7 @@
 
 This directory is used to store financial data downloaded from SimFin.
 
-The data files (CSV) are automatically downloaded by the GitHub Actions workflow and are excluded from version control via `.gitignore`.
+The data files (CSV) are automatically downloaded by the GitHub Actions workflow and committed to the `data-update` branch.
 
 ## Data Sources
 
@@ -11,7 +11,17 @@ The data files (CSV) are automatically downloaded by the GitHub Actions workflow
 
 ## Automated Downloads
 
-The workflow `.github/workflows/download-simfin-data.yml` runs daily at 2 AM UTC to download the latest data.
+The workflow `.github/workflows/download-simfin-data.yml` runs daily at 2 AM UTC to download the latest data to the `data-update` branch.
+
+## Large File Handling
+
+Due to GitHub's 100MB file size limit, large CSV files (particularly `us-shareprices-daily.csv`) are automatically split into 50MB chunks with `.part*` extensions.
+
+To reconstruct split files:
+```bash
+# Reconstruct a split file (e.g., us-shareprices-daily.csv)
+cat stock_data/us-shareprices-daily.csv.part* > stock_data/us-shareprices-daily.csv
+```
 
 ## Local Usage
 

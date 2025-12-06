@@ -151,6 +151,46 @@ jobs:
             echo "⚠️ stock_data directory does not exist"
           fi
       
+      - name: Split large files
+        run: |
+          echo "Checking for files larger than GitHub's 100MB limit..."
+          
+          if [ -d "stock_data" ]; then
+            # Find CSV files larger than 90MB (conservative threshold)
+            large_files=$(find stock_data -type f -name "*.csv" -size +90M 2>/dev/null || true)
+            
+            if [ -n "$large_files" ]; then
+              echo "Found large files that exceed GitHub's limit:"
+              echo "$large_files"
+              echo ""
+              echo "Splitting large files into 50MB chunks..."
+              
+              for file in $large_files; do
+                filename=$(basename "$file")
+                dirname=$(dirname "$file")
+                
+                echo "Splitting $filename..."
+                
+                # Split file into 50MB chunks (52428800 bytes)
+                # -d uses numeric suffixes, -a 3 gives 3-digit suffixes (supports up to 1000 files)
+                split -b 50M -d -a 3 "$file" "${file}.part"
+                
+                # Remove the original large file
+                rm "$file"
+                
+                echo "✓ $filename split into chunks"
+              done
+              
+              echo ""
+              echo "Split files created:"
+              find stock_data -type f -name "*.part*" 2>/dev/null || echo "No split files found"
+            else
+              echo "✓ No files exceed the size limit - all files can be committed directly"
+            fi
+          else
+            echo "⚠️ stock_data directory does not exist"
+          fi
+      
       - name: Check for changes
         id: check_changes
         run: |
