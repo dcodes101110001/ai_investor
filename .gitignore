@@ -21,8 +21,8 @@ wheels/
 *.egg
 
 # SimFin data directory and CSV files
-stock_data/
-*.csv
+stock_data/*.csv
+stock_data/**/*.csv
 
 # Virtual environments
 venv/
