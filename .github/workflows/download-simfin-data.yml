@@ -16,6 +16,9 @@ jobs:
     name: Download SimFin Data
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,15 +33,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install simfin pandas numpy
-
-      - name: Create stock_data directory if not exists
-        run: |
-          if [ ! -d "stock_data" ]; then
-            echo "Creating stock_data directory..."
-            mkdir -p stock_data
-          else
-            echo "stock_data directory already exists"
-          fi
 
       - name: Download SimFin data
         env:
@@ -75,9 +69,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: download-logs-${{ github.run_number }}
-          path: |
-            stock_data/
-            *.log
+          path: stock_data/
           retention-days: 7
 
       - name: Report success

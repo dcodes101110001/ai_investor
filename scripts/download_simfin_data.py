@@ -44,8 +44,6 @@ def setup_data_directory():
 
 def download_simfin_data():
     """Download SimFin data files using the SimFin Python API."""
-    global SIMFIN_AVAILABLE
-    
     try:
         # Check if simfin is available
         if not SIMFIN_AVAILABLE:
