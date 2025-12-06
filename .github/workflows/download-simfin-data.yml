@@ -463,42 +463,38 @@ jobs:
                 else
                   rebase_exit_code=$?
                   echo "⚠️ Rebase failed with exit code: $rebase_exit_code"
+                  echo "Attempting to resolve conflicts automatically..."
                   
-                  # Check if there are conflicts
-                  if [ $rebase_exit_code -ne 0 ]; then
-                    echo "Attempting to resolve conflicts automatically..."
+                  # For data files, we can use 'ours' strategy (keep our version)
+                  # since automated data downloads should overwrite old data
+                  git checkout --ours stock_data/ 2>/dev/null || true
+                  git add stock_data/ 2>/dev/null || true
+                  
+                  # Try to continue rebase
+                  if git rebase --continue 2>&1 | tee -a "$push_error_log"; then
+                    echo "✓ Conflicts resolved, rebase completed"
+                  else
+                    echo "❌ Cannot automatically resolve conflicts"
+                    echo "Aborting rebase and using force push..."
+                    git rebase --abort
                     
-                    # For data files, we can use 'ours' strategy (keep our version)
-                    # since automated data downloads should overwrite old data
-                    git checkout --ours stock_data/ 2>/dev/null || true
-                    git add stock_data/ 2>/dev/null || true
-                    
-                    # Try to continue rebase
-                    if git rebase --continue 2>&1 | tee -a "$push_error_log"; then
-                      echo "✓ Conflicts resolved, rebase completed"
+                    # As a fallback, force push (safe for data branch)
+                    echo "Using force push to overwrite remote branch..."
+                    if git push --force-with-lease origin "$TARGET_BRANCH" 2>&1 | tee -a "$push_error_log"; then
+                      echo "✓ Changes force-pushed successfully to branch: $TARGET_BRANCH"
+                      echo ""
+                      echo "Summary:"
+                      echo "  - Data downloaded and committed"
+                      echo "  - Branch: $TARGET_BRANCH"
+                      echo "  - Commit: $(git rev-parse HEAD)"
+                      echo "  - Method: Force push (with lease)"
+                      echo ""
+                      echo "📝 Note: Changes are on the '$TARGET_BRANCH' branch"
+                      echo "   You can review and merge these changes into your main branch when ready."
+                      break  # Exit the retry loop successfully
                     else
-                      echo "❌ Cannot automatically resolve conflicts"
-                      echo "Aborting rebase and using force push..."
-                      git rebase --abort
-                      
-                      # As a fallback, force push (safe for data branch)
-                      echo "Using force push to overwrite remote branch..."
-                      if git push --force-with-lease origin "$TARGET_BRANCH" 2>&1 | tee "$push_error_log"; then
-                        echo "✓ Changes force-pushed successfully to branch: $TARGET_BRANCH"
-                        echo ""
-                        echo "Summary:"
-                        echo "  - Data downloaded and committed"
-                        echo "  - Branch: $TARGET_BRANCH"
-                        echo "  - Commit: $(git rev-parse HEAD)"
-                        echo "  - Method: Force push (with lease)"
-                        echo ""
-                        echo "📝 Note: Changes are on the '$TARGET_BRANCH' branch"
-                        echo "   You can review and merge these changes into your main branch when ready."
-                        exit 0
-                      else
-                        echo "❌ Force push also failed"
-                        # Continue to retry logic below
-                      fi
+                      echo "❌ Force push also failed"
+                      # Continue to retry logic below
                     fi
                   fi
                 fi
@@ -511,7 +507,7 @@ jobs:
             
             # Push commits to the data update branch
             # Capture both stdout and stderr for better error diagnosis
-            if git push origin "$TARGET_BRANCH" 2>&1 | tee "$push_error_log"; then
+            if git push origin "$TARGET_BRANCH" 2>&1 | tee -a "$push_error_log"; then
               echo "✓ Changes pushed successfully to branch: $TARGET_BRANCH"
               echo ""
               echo "Summary:"
@@ -522,7 +518,7 @@ jobs:
               echo "📝 Note: Changes are on the '$TARGET_BRANCH' branch"
               echo "   You can review and merge these changes into your main branch when ready."
               
-              exit 0
+              break  # Exit retry loop successfully
             else
               # Capture the exit code
               push_exit_code=$?
