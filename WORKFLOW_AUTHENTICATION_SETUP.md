@@ -1,5 +1,13 @@
 # GitHub Actions Workflow Authentication Setup
 
+## 🚀 Quick Start
+
+**For most users**: The workflow file (`.github/workflows/download-simfin-data.yml`) now contains comprehensive inline documentation with step-by-step setup instructions. Simply open the workflow file and follow the comments in the "Setup Personal Access Token" step.
+
+This guide provides additional context and troubleshooting information.
+
+---
+
 ## Overview
 
 This document provides detailed instructions for setting up authentication for the SimFin data download workflow to resolve the `@github-actions[bot] can not upload new objects to public fork` error.
@@ -94,9 +102,12 @@ This workflow supports **two authentication methods**. Choose the one that best 
    - Value: Paste your Personal Access Token
    - Click **Add secret**
 
-3. **Ensure SSH authentication is NOT enabled**:
-   - Go to: **Settings** → **Secrets and variables** → **Actions** → **Variables** tab
-   - Make sure there's no `USE_SSH_AUTH` variable, or it's set to `false`
+3. **Verify the Setup**:
+   - The workflow will now automatically use GITHUB_PAT when pushing changes
+   - Run the workflow manually to test: **Actions** → **Download SimFin Data** → **Run workflow**
+   - Check the logs for: "✓ Personal Access Token configured successfully"
+
+**Note:** The workflow file contains detailed inline instructions. See the "Setup Personal Access Token" step in `.github/workflows/download-simfin-data.yml` for complete documentation.
 
 ## Configuration Options
 
