@@ -17,3 +17,8 @@ ENV/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Data files (downloaded by workflow)
+stock_data/
+*.csv
+*.zip

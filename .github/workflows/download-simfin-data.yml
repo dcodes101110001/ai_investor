@@ -1,0 +1,99 @@
+name: Daily SimFin Data Download
+
+on:
+  # Run daily at 2 AM UTC
+  schedule:
+    - cron: '0 2 * * *'
+
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  download-simfin-data:
+    name: Download SimFin Data
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install simfin pandas numpy
+
+      - name: Create stock_data directory if not exists
+        run: |
+          if [ ! -d "stock_data" ]; then
+            echo "Creating stock_data directory..."
+            mkdir -p stock_data
+          else
+            echo "stock_data directory already exists"
+          fi
+
+      - name: Download SimFin data
+        env:
+          SIMFIN_API_KEY: ${{ secrets.SIMFIN_API_KEY }}
+        run: |
+          echo "Starting SimFin data download..."
+          python scripts/download_simfin_data.py
+        continue-on-error: false
+
+      - name: Verify downloaded files
+        run: |
+          echo "Checking downloaded files in stock_data directory..."
+          if [ -d "stock_data" ]; then
+            echo "Files in stock_data:"
+            ls -lh stock_data/
+
+            # Count files
+            file_count=$(find stock_data -type f | wc -l)
+            echo "Total files downloaded: $file_count"
+
+            if [ $file_count -gt 0 ]; then
+              echo "✓ Data download successful!"
+            else
+              echo "✗ Warning: No files found in stock_data directory"
+              exit 1
+            fi
+          else
+            echo "✗ Error: stock_data directory not found"
+            exit 1
+          fi
+
+      - name: Upload download logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: download-logs-${{ github.run_number }}
+          path: |
+            stock_data/
+            *.log
+          retention-days: 7
+
+      - name: Report success
+        if: success()
+        run: |
+          echo "================================================"
+          echo "SimFin data download completed successfully!"
+          echo "Run date: $(date)"
+          echo "================================================"
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "================================================"
+          echo "SimFin data download failed!"
+          echo "Run date: $(date)"
+          echo "Please check the logs for more details."
+          echo "================================================"
+          exit 1
