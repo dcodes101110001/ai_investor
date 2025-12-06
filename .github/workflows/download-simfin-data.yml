@@ -172,7 +172,9 @@ jobs:
                 echo "Splitting $filename..."
                 
                 # Split file into 50MB chunks (52428800 bytes)
-                # -d uses numeric suffixes, -a 3 gives 3-digit suffixes (supports up to 1000 files)
+                # -d uses numeric suffixes, -a 3 gives 3-digit suffixes (part000, part001, etc.)
+                # This creates files like: filename.csv.part000, filename.csv.part001, ...
+                # These can be reconstructed with: cat filename.csv.part* > filename.csv
                 split -b 50M -d -a 3 "$file" "${file}.part"
                 
                 # Remove the original large file

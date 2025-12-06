@@ -19,8 +19,13 @@ Due to GitHub's 100MB file size limit, large CSV files (particularly `us-sharepr
 
 To reconstruct split files:
 ```bash
-# Reconstruct a split file (e.g., us-shareprices-daily.csv)
+# Example: Reconstruct us-shareprices-daily.csv from split parts
+# Run from repository root
 cat stock_data/us-shareprices-daily.csv.part* > stock_data/us-shareprices-daily.csv
+
+# Or from within the stock_data directory
+cd stock_data
+cat us-shareprices-daily.csv.part* > us-shareprices-daily.csv
 ```
 
 ## Local Usage
