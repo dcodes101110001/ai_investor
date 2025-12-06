@@ -48,7 +48,6 @@ jobs:
         run: |
           echo "Starting SimFin data download..."
           python scripts/download_simfin_data.py
-        continue-on-error: false
       
       - name: Verify downloaded files
         run: |

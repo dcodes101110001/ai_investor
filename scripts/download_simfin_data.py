@@ -93,14 +93,18 @@ def download_file(url, destination_path, timeout=300):
             if total_size > 0:
                 logger.info(f"File size: {total_size / (1024*1024):.2f} MB")
                 downloaded = 0
+                last_logged = 0
+                log_interval = 10 * 1024 * 1024  # Log every 10MB
+                
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
                         downloaded += len(chunk)
-                        # Log progress every 10MB
-                        if downloaded % (10 * 1024 * 1024) == 0:
+                        # Log progress at intervals
+                        if downloaded - last_logged >= log_interval:
                             progress = (downloaded / total_size) * 100
                             logger.info(f"Download progress: {progress:.1f}%")
+                            last_logged = downloaded
             else:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
@@ -118,11 +122,12 @@ def download_file(url, destination_path, timeout=300):
         return False
     except requests.exceptions.HTTPError as e:
         logger.error(f"HTTP error while downloading {url}: {e}")
-        logger.error(f"Status code: {response.status_code}")
-        if response.status_code == 401:
-            logger.error("Authentication failed. Please check your SIMFIN_API_KEY.")
-        elif response.status_code == 404:
-            logger.error("File not found. The URL may be incorrect.")
+        if e.response is not None:
+            logger.error(f"Status code: {e.response.status_code}")
+            if e.response.status_code == 401:
+                logger.error("Authentication failed. Please check your SIMFIN_API_KEY.")
+            elif e.response.status_code == 404:
+                logger.error("File not found. The URL may be incorrect.")
         return False
     except Exception as e:
         logger.error(f"Unexpected error while downloading {url}: {e}")
