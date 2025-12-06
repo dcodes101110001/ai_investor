@@ -4,7 +4,7 @@
 # 
 # PURPOSE:
 #   Automatically downloads financial data from SimFin API and commits it
-#   to a dedicated branch (data-updates) for review and merging.
+#   to a dedicated branch (data-update) for review and merging.
 # 
 # SCHEDULE:
 #   Runs daily at 2 AM UTC (automatic)
@@ -15,19 +15,18 @@
 #      - Your SimFin API key for data access
 #      - Get it from: https://simfin.com/
 # 
-#   2. GIT_PAT (required for public forks)
+#   2. GIT_PAT (optional for public forks)
 #      - Personal Access Token with 'repo' and 'workflow' scopes
-#      - Required for pushing Git LFS data to public forks
+#      - Only needed if pushing to a public fork
 #      - Setup instructions in the "Setup Personal Access Token" step below
 #      - Alternative: Use SSH_DEPLOY_KEY (see WORKFLOW_AUTHENTICATION_SETUP.md)
 # 
 # OPTIONAL CONFIGURATION:
-#   - DATA_BRANCH variable: Custom branch name (default: data-updates)
+#   - DATA_BRANCH variable: Custom branch name (default: data-update)
 #   - USE_SSH_AUTH variable: Set to 'true' to use SSH instead of PAT
 # 
 # DOCUMENTATION:
 #   - Full setup guide: WORKFLOW_AUTHENTICATION_SETUP.md
-#   - Git LFS setup: GIT_LFS_INTEGRATION.md
 #   - Troubleshooting: WORKFLOW_FIX_DOCUMENTATION.md
 # 
 # ============================================================================
@@ -56,17 +55,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1  # Shallow clone to reduce checkout time and data transfer
-          lfs: true  # Enable Git LFS for large file handling
-      
-      - name: Configure Git LFS
-        run: |
-          echo "Configuring Git Large File Storage (LFS)..."
-          git lfs install
-          echo "✓ Git LFS installed and configured"
-          
-          # Verify LFS is working
-          git lfs version
-          echo "✓ Git LFS version verified"
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -122,42 +110,18 @@ jobs:
             echo "✓ Download verification successful"
           fi
       
-      - name: Verify Git LFS tracking
-        run: |
-          echo "Verifying Git LFS file tracking..."
-          
-          # Check if CSV files exist to track
-          if [ -d stock_data/ ] && [ -n "$(find stock_data -name '*.csv' -print -quit)" ]; then
-            echo "Files in stock_data that will be tracked by LFS:"
-            git lfs track 2>/dev/null || echo "Git LFS tracking patterns:"
-            cat .gitattributes | grep "\.csv"
-            
-            # Show which files will be tracked by LFS
-            echo ""
-            echo "CSV files that match LFS patterns:"
-            find stock_data -name "*.csv" 2>/dev/null | head -10 || echo "No CSV files yet"
-            
-            echo "✓ Git LFS tracking configuration verified"
-          else
-            echo "⚠️ No files to track yet"
-          fi
-      
       - name: Configure Git
         run: |
           echo "Configuring Git for automated commits..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Git LFS configuration for better performance
-          git config --global lfs.concurrenttransfers 10
-          git config --global lfs.transfer.maxretries 3
-          
-          # Increase buffer size to handle large payloads (150MB)
-          git config --global http.postBuffer 157286400
+          # Increase buffer size to handle large payloads (500MB)
+          git config --global http.postBuffer 524288000
           
           # Configure timeout settings for better reliability
           git config --global http.lowSpeedLimit 1000
-          git config --global http.lowSpeedTime 60
+          git config --global http.lowSpeedTime 120
           
           echo "✓ Git configured successfully"
       
@@ -268,7 +232,7 @@ jobs:
           current_date=$(date -u +"%Y-%m-%d %H:%M:%S")
           
           # Define the target branch for data updates
-          TARGET_BRANCH="${{ vars.DATA_BRANCH || 'data-updates' }}"
+          TARGET_BRANCH="${{ vars.DATA_BRANCH || 'data-update' }}"
           CURRENT_BRANCH="${{ github.ref_name }}"
           
           echo "Current branch: $CURRENT_BRANCH"
@@ -298,18 +262,18 @@ jobs:
           git commit -m "chore: update SimFin data - $current_date UTC"
           echo "✓ Changes committed successfully to branch: $TARGET_BRANCH"
       
-      # AUTHENTICATION SETUP FOR GIT PUSH WITH LFS
-      # ============================================
+      # AUTHENTICATION SETUP FOR GIT PUSH
+      # ====================================
       # This step configures authentication for pushing changes to the repository.
       # 
       # WHY IS THIS NEEDED?
-      # - This is a PUBLIC FORK, and GitHub restricts Git LFS uploads from forks using the default GITHUB_TOKEN
-      # - Error without proper auth: "@github-actions[bot] can not upload new objects to public fork"
-      # - The downloaded data files (~400MB+) are tracked by Git LFS and require elevated permissions
+      # - On public forks, the default GITHUB_TOKEN may have restrictions
+      # - Using a Personal Access Token (PAT) or SSH key provides more reliable authentication
+      # - The downloaded data files (~400MB+) require sufficient permissions to push
       # 
-      # REQUIRED: GIT_PAT SECRET
+      # OPTIONAL: GIT_PAT SECRET
       # ---------------------------
-      # You MUST create a Personal Access Token (PAT) with the following scopes:
+      # If needed, create a Personal Access Token (PAT) with the following scopes:
       #   ✓ repo (Full control of private repositories)
       #   ✓ workflow (Update GitHub Action workflows)
       # 
@@ -352,41 +316,19 @@ jobs:
             git remote set-url origin "https://x-access-token:${GIT_PAT}@github.com/${{ github.repository }}.git"
             
             echo "✓ Personal Access Token configured successfully"
-            echo "✓ Authentication ready for Git LFS push operations"
+            echo "✓ Authentication ready for git push operations"
           else
-            echo "❌ ERROR: GIT_PAT secret not found!"
+            echo "⚠️ WARNING: GIT_PAT secret not found!"
             echo ""
-            echo "═══════════════════════════════════════════════════════════════"
-            echo "  AUTHENTICATION REQUIRED FOR GIT LFS ON PUBLIC FORKS"
-            echo "═══════════════════════════════════════════════════════════════"
+            echo "The workflow will attempt to push using the default GITHUB_TOKEN."
+            echo "If push fails, you may need to configure GIT_PAT."
             echo ""
-            echo "This workflow cannot push Git LFS data without proper authentication."
-            echo "The default GITHUB_TOKEN has insufficient permissions on public forks."
+            echo "To set up GIT_PAT (if needed):"
+            echo "1. Create Personal Access Token at: https://github.com/settings/tokens"
+            echo "2. Select scopes: repo + workflow"
+            echo "3. Add as repository secret named 'GIT_PAT'"
             echo ""
-            echo "Please set up a GIT_PAT secret with the following scopes:"
-            echo "  • repo (Full control of private repositories)"
-            echo "  • workflow (Update GitHub Action workflows)"
-            echo ""
-            echo "Quick Setup Guide:"
-            echo "-------------------"
-            echo "1. Create Personal Access Token:"
-            echo "   → Visit: https://github.com/settings/tokens"
-            echo "   → Click: Generate new token (classic)"
-            echo "   → Select scopes: repo + workflow"
-            echo "   → Copy the generated token"
-            echo ""
-            echo "2. Add as Repository Secret:"
-            echo "   → Go to: Repository Settings → Secrets and variables → Actions"
-            echo "   → Click: New repository secret"
-            echo "   → Name: GIT_PAT"
-            echo "   → Value: (paste your token)"
-            echo ""
-            echo "3. Re-run this workflow"
-            echo ""
-            echo "For detailed instructions, see: WORKFLOW_AUTHENTICATION_SETUP.md"
-            echo "═══════════════════════════════════════════════════════════════"
-            echo ""
-            exit 1
+            echo "Continuing with default authentication..."
           fi
       
       # VALIDATE AUTHENTICATION BEFORE PUSH
@@ -438,14 +380,10 @@ jobs:
       - name: Push changes
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
-          echo "Pushing changes to remote repository with Git LFS..."
+          echo "Pushing changes to remote repository..."
           
           # Get the target branch name
-          TARGET_BRANCH="${{ vars.DATA_BRANCH || 'data-updates' }}"
-          
-          # Verify LFS objects are ready
-          echo "Checking Git LFS status..."
-          git lfs status || echo "No LFS objects yet"
+          TARGET_BRANCH="${{ vars.DATA_BRANCH || 'data-update' }}"
           
           # Display what will be pushed
           echo ""
@@ -463,7 +401,7 @@ jobs:
             echo "Push attempt $attempt of $max_attempts..."
             echo "Pushing to branch: $TARGET_BRANCH"
             
-            # Push commits and LFS objects to the data updates branch
+            # Push commits to the data update branch
             # Capture both stdout and stderr for better error diagnosis
             if git push origin "$TARGET_BRANCH" 2>&1 | tee "$push_error_log"; then
               echo "✓ Changes pushed successfully to branch: $TARGET_BRANCH"
@@ -476,53 +414,11 @@ jobs:
               echo "📝 Note: Changes are on the '$TARGET_BRANCH' branch"
               echo "   You can review and merge these changes into your main branch when ready."
               
-              # Show LFS transfer summary if applicable
-              echo ""
-              echo "Git LFS transfer summary:"
-              git lfs ls-files -s 2>/dev/null | head -10 || echo "No LFS files tracked yet"
-              
               exit 0
             else
               # Capture the exit code
               push_exit_code=$?
               echo "⚠️ Push attempt $attempt failed with exit code: $push_exit_code"
-              
-              # Check if it's the known LFS fork restriction error
-              if grep -q "can not upload new objects to public fork" "$push_error_log" 2>/dev/null; then
-                echo ""
-                echo "═══════════════════════════════════════════════════════════════"
-                echo "  DETECTED: Git LFS Public Fork Restriction"
-                echo "═══════════════════════════════════════════════════════════════"
-                echo ""
-                echo "GitHub prevents Git LFS uploads to public forks for security."
-                echo "This is a known limitation, not a credentials issue."
-                echo ""
-                echo "Files causing the issue:"
-                git lfs ls-files 2>/dev/null || echo "No LFS files detected"
-                echo ""
-                echo "DIAGNOSIS:"
-                echo "----------"
-                echo "✓ Authentication appears correct (GIT_PAT is configured)"
-                echo "✗ Git LFS is attempting to upload files to a public fork"
-                echo "✗ GitHub blocks LFS uploads to public forks even with valid PAT"
-                echo ""
-                echo "RECOMMENDED SOLUTIONS:"
-                echo "---------------------"
-                echo "1. Remove large files from Git LFS tracking:"
-                echo "   - Check .gitattributes for patterns tracking unwanted files"
-                echo "   - Add large files (e.g., *.zip) to .gitignore instead"
-                echo "   - Only track essential data files with LFS"
-                echo ""
-                echo "2. Alternative: Make repository private (if acceptable)"
-                echo "   - Go to Settings → Danger Zone → Change visibility"
-                echo "   - This removes the fork restriction"
-                echo ""
-                echo "3. Use artifacts instead of Git for large data:"
-                echo "   - Data is already uploaded as workflow artifacts"
-                echo "   - Available for 30 days in Actions tab"
-                echo ""
-                exit 1
-              fi
               
               if [ $attempt -lt $max_attempts ]; then
                 wait_time=$((attempt * 10))
@@ -533,7 +429,7 @@ jobs:
                 echo "❌ Failed to push changes after $max_attempts attempts"
                 echo ""
                 echo "═══════════════════════════════════════════════════════════════"
-                echo "  PUSH FAILED: AUTHENTICATION OR PERMISSIONS ISSUE"
+                echo "  PUSH FAILED: AUTHENTICATION OR NETWORK ISSUE"
                 echo "═══════════════════════════════════════════════════════════════"
                 echo ""
                 echo "Error details from git push:"
@@ -544,11 +440,8 @@ jobs:
                 echo "  • PAT lacks required scopes (repo, workflow)"
                 echo "  • PAT has expired"
                 echo "  • Network connectivity issues"
-                echo "  • Git LFS quota exceeded"
+                echo "  • Large file size exceeds GitHub limits (100MB per file)"
                 echo "  • Branch protection rules blocking push"
-                echo ""
-                echo "If you see: '@github-actions[bot] can not upload new objects'"
-                echo "  → This means GIT_PAT is not configured or invalid"
                 echo ""
                 echo "SOLUTION:"
                 echo "----------"
@@ -591,7 +484,7 @@ jobs:
         if: always()
         run: |
           # Get the target branch name
-          TARGET_BRANCH="${{ vars.DATA_BRANCH || 'data-updates' }}"
+          TARGET_BRANCH="${{ vars.DATA_BRANCH || 'data-update' }}"
           
           echo "## SimFin Data Download Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -611,17 +504,6 @@ jobs:
             echo "⚠️ stock_data directory not found" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
-          
-          # Add Git LFS information
-          echo "### Git LFS Status" >> $GITHUB_STEP_SUMMARY
-          if git lfs ls-files 2>/dev/null | grep -q .; then
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            git lfs ls-files >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "No files tracked by LFS yet" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
           
           # Add commit status information
           if [ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]; then
