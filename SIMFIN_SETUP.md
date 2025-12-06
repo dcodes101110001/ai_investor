@@ -51,8 +51,10 @@ You can manually trigger the workflow to verify it works:
 When the workflow runs successfully:
 - ✅ The workflow will download 4 datasets (Income Statements, Balance Sheets, Cash Flow Statements, Share Prices)
 - ✅ CSV files will be saved to the `stock_data/` directory
+- ✅ Changes will be automatically committed and pushed to the repository
 - ✅ Logs will show the number of rows downloaded for each dataset
 - ✅ A workflow artifact containing the data will be created
+- ✅ The repository will contain the latest financial data
 
 ### Troubleshooting
 
@@ -76,15 +78,18 @@ If the workflow fails:
 ## Accessing Downloaded Data
 
 The downloaded data files are:
-- Not committed to the repository (excluded via `.gitignore`)
-- Available as workflow artifacts for 30 days
-- Automatically refreshed daily
+- **Automatically committed to the repository** after each successful download
+- Updated daily at 2:00 AM UTC
+- Available directly in the `stock_data/` directory on the main branch
+- Also available as workflow artifacts for 30 days
 
 To access the data:
-1. Go to the **Actions** tab
-2. Click on a successful workflow run
-3. Scroll to the **Artifacts** section at the bottom
-4. Download the `simfin-data-*` artifact
+1. **From the repository:** The latest data is always available in the `stock_data/` directory
+2. **From workflow artifacts:** 
+   - Go to the **Actions** tab
+   - Click on a successful workflow run
+   - Scroll to the **Artifacts** section at the bottom
+   - Download the `simfin-data-*` artifact
 
 ## Local Usage
 
@@ -133,5 +138,6 @@ For issues related to:
 
 - ✅ API key is stored securely in GitHub Secrets
 - ✅ API key is never logged or exposed in workflow runs
-- ✅ Workflow has minimal permissions (read-only access to repository)
-- ✅ Downloaded data files are not committed to version control
+- ✅ Workflow has write permissions to commit downloaded data
+- ✅ Commits are made by `github-actions[bot]` user
+- ✅ Downloaded data files are committed to version control for easy access

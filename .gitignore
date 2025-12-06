@@ -20,9 +20,9 @@ wheels/
 .installed.cfg
 *.egg
 
-# SimFin data directory and CSV files
-stock_data/*.csv
-stock_data/**/*.csv
+# SimFin data directory - CSV files are now committed for automated workflow
+# stock_data/*.csv
+# stock_data/**/*.csv
 
 # Virtual environments
 venv/
