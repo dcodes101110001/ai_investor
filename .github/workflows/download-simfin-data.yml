@@ -60,6 +60,11 @@ jobs:
           
           if [ "$file_count" -eq 0 ]; then
             echo "⚠️ Warning: No CSV files were downloaded"
+            echo "Possible causes:"
+            echo "  - Invalid or missing SIMFIN_API_KEY secret"
+            echo "  - Network connectivity issues"
+            echo "  - SimFin API service unavailable"
+            echo "  - API rate limit exceeded"
             exit 1
           else
             echo "✓ Download verification successful"

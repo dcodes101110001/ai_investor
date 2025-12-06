@@ -10,10 +10,10 @@ Usage:
     python scripts/download_simfin_data.py
 
 The script downloads:
-- US Income statements (annual)
-- US Balance sheets (annual)
-- US Cash flow statements (annual)
-- US Daily share prices
+- US Income Statements (annual)
+- US Balance Sheets (annual)
+- US Cash Flow Statements (annual)
+- US Daily Share Prices
 """
 
 import os
