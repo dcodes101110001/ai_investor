@@ -21,6 +21,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1  # Shallow clone to reduce checkout time and data transfer
+          lfs: true  # Enable Git LFS for large file handling
+      
+      - name: Configure Git LFS
+        run: |
+          echo "Configuring Git Large File Storage (LFS)..."
+          git lfs install
+          echo "✓ Git LFS installed and configured"
+          
+          # Verify LFS is working
+          git lfs version
+          echo "✓ Git LFS version verified"
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -76,11 +87,35 @@ jobs:
             echo "✓ Download verification successful"
           fi
       
+      - name: Verify Git LFS tracking
+        run: |
+          echo "Verifying Git LFS file tracking..."
+          
+          # Check if CSV files exist to track
+          if [ -d stock_data/ ] && [ -n "$(find stock_data -name '*.csv' -print -quit)" ]; then
+            echo "Files in stock_data that will be tracked by LFS:"
+            git lfs track 2>/dev/null || echo "Git LFS tracking patterns:"
+            cat .gitattributes | grep "\.csv"
+            
+            # Show which files will be tracked by LFS
+            echo ""
+            echo "CSV files that match LFS patterns:"
+            find stock_data -name "*.csv" 2>/dev/null | head -10 || echo "No CSV files yet"
+            
+            echo "✓ Git LFS tracking configuration verified"
+          else
+            echo "⚠️ No files to track yet"
+          fi
+      
       - name: Configure Git
         run: |
           echo "Configuring Git for automated commits..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Git LFS configuration for better performance
+          git config --global lfs.concurrenttransfers 10
+          git config --global lfs.transfer.maxretries 3
           
           # Increase buffer size to handle large payloads (150MB)
           git config --global http.postBuffer 157286400
@@ -126,7 +161,11 @@ jobs:
       - name: Push changes
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
-          echo "Pushing changes to remote repository..."
+          echo "Pushing changes to remote repository with Git LFS..."
+          
+          # Verify LFS objects are ready
+          echo "Checking Git LFS status..."
+          git lfs status || echo "No LFS objects yet"
           
           # Push with retry logic to handle transient network issues
           max_attempts=3
@@ -135,13 +174,20 @@ jobs:
           while [ $attempt -le $max_attempts ]; do
             echo "Push attempt $attempt of $max_attempts..."
             
-            if git push; then
+            # Push commits and LFS objects (using origin HEAD for explicit branch)
+            if git push origin HEAD; then
               echo "✓ Changes pushed successfully to branch: ${{ github.ref_name }}"
               echo ""
               echo "Summary:"
               echo "  - Data downloaded and committed"
               echo "  - Branch: ${{ github.ref_name }}"
               echo "  - Commit: $(git rev-parse HEAD)"
+              
+              # Show LFS transfer summary if applicable
+              echo ""
+              echo "Git LFS transfer summary:"
+              git lfs ls-files -s 2>/dev/null | head -10 || echo "No LFS files tracked yet"
+              
               exit 0
             else
               echo "⚠️ Push attempt $attempt failed"
@@ -157,6 +203,7 @@ jobs:
                 echo "  - The branch has been updated since checkout"
                 echo "  - Network connectivity issues"
                 echo "  - Large file transfer timeout"
+                echo "  - Git LFS quota exceeded"
                 echo "Please check the workflow run logs for details"
                 exit 1
               fi
@@ -191,6 +238,17 @@ jobs:
             echo "⚠️ stock_data directory not found" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
+          
+          # Add Git LFS information
+          echo "### Git LFS Status" >> $GITHUB_STEP_SUMMARY
+          if git lfs ls-files 2>/dev/null | grep -q .; then
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            git lfs ls-files >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No files tracked by LFS yet" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
           
           # Add commit status information
           if [ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]; then
