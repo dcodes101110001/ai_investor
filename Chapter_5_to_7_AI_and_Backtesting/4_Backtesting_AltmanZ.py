@@ -55,9 +55,9 @@ def loadXandyAgain(randRows=False):
     Returns X, y.
     '''
     # Read in data
-    X=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios.csv",
+    X=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios.csv",
                   index_col=0)
-    y=pd.read_csv("Annual_Stock_Price_Performance_Percentage.csv",
+    y=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Percentage.csv",
                   index_col=0)
     y=y["Perf"] # We only need the % returns as target
     
@@ -96,10 +96,10 @@ X_train, X_test, y_train, y_test = train_test_split(X, y,
 # Save CSVs 
 # For the backtester to get correct test data
 # in case want to see the data.
-X_train.to_csv("Annual_Stock_Price_Fundamentals_Ratios_train.csv")
-X_test.to_csv("Annual_Stock_Price_Fundamentals_Ratios_test.csv")
-y_train.to_csv("Annual_Stock_Price_Performance_Percentage_train.csv")
-y_test.to_csv("Annual_Stock_Price_Performance_Percentage_test.csv")
+X_train.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_train.csv")
+X_test.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_test.csv")
+y_train.to_csv("stock_data\\Annual_Stock_Price_Performance_Percentage_train.csv")
+y_test.to_csv("stock_data\\Annual_Stock_Price_Performance_Percentage_test.csv")
 
 # Linear
 from sklearn.linear_model import LinearRegression
@@ -118,7 +118,7 @@ print('train mse: ',
 print('test mse: ',
       mean_squared_error(y_test, y_pred))
 
-pickle.dump(pl_linear, open("pl_linear.p", "wb" ))
+pickle.dump(pl_linear, open("stock_data\\pl_linear.p", "wb" ))
 
 
 # ==============================================================================
@@ -139,10 +139,10 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_
 # Save CSVs 
 # For the backtester to get correct test data
 # in case want to see the data.
-X_train.to_csv("Annual_Stock_Price_Fundamentals_Ratios_train.csv")
-X_test.to_csv("Annual_Stock_Price_Fundamentals_Ratios_test.csv")
-y_train.to_csv("Annual_Stock_Price_Performance_Percentage_train.csv")
-y_test.to_csv("Annual_Stock_Price_Performance_Percentage_test.csv")
+X_train.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_train.csv")
+X_test.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_test.csv")
+y_train.to_csv("stock_data\\Annual_Stock_Price_Performance_Percentage_train.csv")
+y_test.to_csv("stock_data\\Annual_Stock_Price_Performance_Percentage_test.csv")
 
 # Forest
 from sklearn.ensemble import RandomForestRegressor
@@ -155,7 +155,7 @@ y_pred = rfregressor.predict(X_test)
 print('train mse: ', mean_squared_error(y_train, rfregressor.predict(X_train)))
 print('test mse: ', mean_squared_error(y_test, y_pred))
 import pickle # To save the fitted model
-pickle.dump(rfregressor, open("rfregressor.p", "wb" ))
+pickle.dump(rfregressor, open("stock_data\\rfregressor.p", "wb" ))
 
 
 # ==============================================================================
@@ -173,11 +173,11 @@ pickle.dump(rfregressor, open("rfregressor.p", "wb" ))
 # to plot the stock prices.
 
 # Financial ratios 
-X=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios.csv", 
+X=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios.csv", 
               index_col=0)
 
 # Annual stock performances, with date data.
-y_withData=pd.read_csv("Annual_Stock_Price_Performance_Filtered.csv", 
+y_withData=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Filtered.csv", 
                        index_col=0)
 
 # Convert to date
@@ -259,7 +259,7 @@ z.head()
 # ==============================================================================
 
 # Daily stock price time series for ALL stocks. 5M rows. Some days missing.
-def getYRawData(directory='C:/Users/damon/OneDrive/BYO_Investing_AI/2024/Stock_Data/SimFin2024/'):
+def getYRawData(directory='stock_data\\'):
     '''
     Can set directory to look for file in.
     Get daily stock price time series for ALL stocks. 
@@ -632,7 +632,7 @@ X_test
 # Cell 35
 # ==============================================================================
 
-trained_model_pipeline = pickle.load(open("rfregressor.p", "rb" ))
+trained_model_pipeline = pickle.load(open("stock_data\\rfregressor.p", "rb" ))
 
 backTest = getPortTimeSeries(y_withData_Test, X_test, 
                          daily_stock_prices_data, 
@@ -716,7 +716,7 @@ plt.ylabel('Relative Performance');
 # Cell 43
 # ==============================================================================
 
-x_=pd.read_csv("Annual_Stock_Price_Fundamentals_Filtered.csv",
+x_=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Filtered.csv",
                index_col=0)
 
 
@@ -760,7 +760,7 @@ mask2015 = y_withData_Test["Date"].between( pd.to_datetime(myDate)
 # ==============================================================================
 
 # Load the model pipeline
-ml_model_pipeline = pickle.load(open("pl_linear.p", "rb" ))
+ml_model_pipeline = pickle.load(open("stock_data\\pl_linear.p", "rb" ))
 y_pred = ml_model_pipeline.predict(X_test[mask2015]) # Get stock performance predictions
 y_pred = pd.DataFrame(y_pred) # Turn into DataFrame
 
@@ -943,7 +943,7 @@ plt.grid()
 
 # GSPC.csv taken directly from Yahoo.com is the S&P500.
 # https://finance.yahoo.com/quote/%5EGSPC/history?period1=1235174400&period2=1613865600&interval=1wk&filter=history&frequency=1wk&includeAdjustedClose=true
-spy=pd.read_csv("GSPC.csv", index_col='Date', parse_dates=True)
+spy=pd.read_csv("stock_data\\GSPC.csv", index_col='Date', parse_dates=True)
 spy = spy[spy.index > pd.to_datetime('2010-01-01')]
 spy['Relative'] = spy["Open"]/spy["Open"][0]
 

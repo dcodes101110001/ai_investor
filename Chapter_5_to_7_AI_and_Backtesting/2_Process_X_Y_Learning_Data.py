@@ -65,9 +65,9 @@ plt.rcParams['figure.dpi'] = 150
 
 # In this notebook we will use x_ for x fundamentals,
 # and X is the input matrix we want at the end.
-x_=pd.read_csv("Annual_Stock_Price_Fundamentals_Filtered.csv",
+x_=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Filtered.csv",
                index_col=0)
-y_=pd.read_csv("Annual_Stock_Price_Performance_Filtered.csv",
+y_=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Filtered.csv",
                index_col=0)
 
 
@@ -367,8 +367,8 @@ for i in range(1, cols*rows):
 # Cell 27
 # ==============================================================================
 
-y.to_csv("Annual_Stock_Price_Performance_Percentage.csv")
-X.to_csv("Annual_Stock_Price_Fundamentals_Ratios.csv")
+y.to_csv("stock_data\\Annual_Stock_Price_Performance_Percentage.csv")
+X.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios.csv")
 
 
 # ==============================================================================
@@ -423,7 +423,7 @@ plt.savefig('Transformat_Dists.png', dpi=300)
 # Cell 31
 # ==============================================================================
 
-X=pd.read_csv("Annual_Stock_Price_Fundamentals_Filtered_2024_present.csv", 
+X=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Filtered_2024_present.csv", 
               index_col=0)
 
 # Net Income fix, checked annual reports.
@@ -433,7 +433,7 @@ fixNansInX(X)
 addColsToX(X)
 X=getXRatios(X)
 fixXRatios(X)
-X.to_csv("Annual_Stock_Price_Fundamentals_Ratios_2024.csv")
+X.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_2024.csv")
 
 
 # ==============================================================================

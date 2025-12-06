@@ -45,7 +45,7 @@ plt.rcParams['figure.dpi'] = 330
 # Cell 5
 # ==============================================================================
 
-data = pd.read_csv('Altman_Z_2D.csv') # Load the .csv data
+data = pd.read_csv('stock_data\Altman_Z_2D.csv') # Load the .csv data
 
 
 # ==============================================================================
@@ -311,7 +311,7 @@ scores
 # ==============================================================================
 
 # If you want to view the large dataset plotted
-#data = pd.read_csv('Altman_Z_2D_Large.csv', index_col=0) # Load the .csv data
+#data = pd.read_csv('stock_data\Altman_Z_2D_Large.csv', index_col=0) # Load the .csv data
 #colours = np.where(data['Bankrupt'], 'r', 'b') # here we define separate colours for True and False
 #data.plot.scatter(x='EBIT/Total Assets', y='MktValEquity/Debt', c = colours); # Have to specify X and Y in Scatterplots
 
@@ -365,7 +365,7 @@ def plotGraph(X_train, X_test, y, tree_clf2):
 # ==============================================================================
 
 # Trying different max_depth values visually
-data = pd.read_csv('Altman_Z_2D_Large.csv', 
+data = pd.read_csv('stock_data\Altman_Z_2D_Large.csv', 
                    index_col=0) # Load the .csv data
 X_large = data[['EBIT/Total Assets','MktValEquity/Debt']]
 y_large = data['Bankrupt']

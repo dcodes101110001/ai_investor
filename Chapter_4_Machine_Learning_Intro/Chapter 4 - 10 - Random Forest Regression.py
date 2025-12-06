@@ -50,7 +50,7 @@ plt.rcParams['figure.dpi'] = 150
 # Cell 7
 # ==============================================================================
 
-data = pd.read_csv('LinRegData.csv') # Read in our data, X and Y are series
+data = pd.read_csv('stock_data\LinRegData.csv') # Read in our data, X and Y are series
 x=data['X'].values.reshape(-1,1) # scikitlearn wants arguments as numpy arrays of this shape
 y=data['Y'].values.reshape(-1,1)
 
@@ -114,7 +114,7 @@ import matplotlib.pyplot as plt
 import numpy as np # scikitlearn uses numpy arrays
 
 # Get data
-data = pd.read_csv('LinRegData.csv') # Read in our data
+data = pd.read_csv('stock_data\LinRegData.csv') # Read in our data
 data.head() # See the first few rows to understand the data
 
 # Data is X and Y coordinates
@@ -173,7 +173,7 @@ plt.grid()
 # Cell 15
 # ==============================================================================
 
-data = pd.read_csv('stock_data_performance_fundamentals_300.csv', index_col=0) # Read in our data
+data = pd.read_csv('stock_data\stock_data_performance_fundamentals_300.csv', index_col=0) # Read in our data
 
 
 # ==============================================================================

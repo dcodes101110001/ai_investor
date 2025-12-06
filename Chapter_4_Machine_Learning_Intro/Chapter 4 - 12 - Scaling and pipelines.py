@@ -27,7 +27,7 @@ plt.rcParams['figure.dpi'] = 150
 # Cell 3
 # ==============================================================================
 
-data = pd.read_csv('stock_data_performance_fundamentals_300.csv', index_col=0)
+data = pd.read_csv('stock_data\stock_data_performance_fundamentals_300.csv', index_col=0)
 x = data.drop(columns='Perf')
 y = data['Perf']
 
@@ -208,7 +208,7 @@ plt.title('Power Transformed {}, Mean {}, std. dev. {}'.format(myKey,
 # Cell 21
 # ==============================================================================
 
-data = pd.read_csv('stock_data_performance_fundamentals_300.csv', index_col=0) # Read in our data
+data = pd.read_csv('stock_data\stock_data_performance_fundamentals_300.csv', index_col=0) # Read in our data
 X=data.drop(columns='Perf')
 y=data['Perf']
 X.keys()

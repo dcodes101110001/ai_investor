@@ -67,9 +67,9 @@ def loadXandyAgain():
     Returns X, y.
     '''
     # Read in data
-    X=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios.csv",
+    X=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios.csv",
                   index_col=0)
-    y=pd.read_csv("Annual_Stock_Price_Performance_Percentage.csv",
+    y=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Percentage.csv",
                   index_col=0)
     y=y["Perf"] # We only need the % returns as target
     
@@ -134,7 +134,7 @@ print('Test MSE: ',
       mean_squared_error(y_test, y_pred))
 
 #import pickle # To save the fitted model
-#pickle.dump(pl_linear, open("pl_linear.p", "wb" ))
+#pickle.dump(pl_linear, open("stock_data\\pl_linear.p", "wb" ))
 
 
 # ==============================================================================
@@ -482,7 +482,7 @@ print('train mse: ', mean_squared_error(y_train, pl_ElasticNet.predict(X_train))
 print('test mse: ', mean_squared_error(y_test, pl_ElasticNet.predict(X_test)))
 
 import pickle
-pickle.dump(pl_ElasticNet, open("pl_ElasticNet.p", "wb" ))
+pickle.dump(pl_ElasticNet, open("stock_data\\pl_ElasticNet.p", "wb" ))
 
 
 # ==============================================================================
@@ -519,7 +519,7 @@ print('train mse: ', mean_squared_error(y_train, pl_ElasticNet.predict(X_train))
 print('test mse: ', mean_squared_error(y_test, pl_ElasticNet.predict(X_test)))
 
 #import pickle
-#pickle.dump(pl_ElasticNet, open("pl_ElasticNet.p", "wb" ))
+#pickle.dump(pl_ElasticNet, open("stock_data\\pl_ElasticNet.p", "wb" ))
 
 
 # ==============================================================================
@@ -631,7 +631,7 @@ print('train mse: ', mean_squared_error(y_train, pl_KNeighbors.predict(X_train))
 print('test mse: ', mean_squared_error(y_test, y_pred))
 
 import pickle
-pickle.dump(pl_KNeighbors, open("pl_KNeighbors.p", "wb" ))
+pickle.dump(pl_KNeighbors, open("stock_data\\pl_KNeighbors.p", "wb" ))
 
 
 # ==============================================================================
@@ -896,7 +896,7 @@ from sklearn.metrics import mean_absolute_error
 print('mae: ', mean_absolute_error(y_test, y_pred))
 
 import pickle
-pickle.dump(pl_svm, open("pl_svm.p", "wb" ))
+pickle.dump(pl_svm, open("stock_data\\pl_svm.p", "wb" ))
 
 
 # ==============================================================================
@@ -973,7 +973,7 @@ from sklearn.metrics import mean_absolute_error
 print('mae: ', mean_absolute_error(y_test, y_pred))
 
 import pickle
-pickle.dump(pl_svm, open("pl_svm.p", "wb" ))
+pickle.dump(pl_svm, open("stock_data\\pl_svm.p", "wb" ))
 
 plt.figure(figsize=(6,6))
 plotDensityContourPredVsReal('pl_svm', y_pred, y_test.to_numpy(), 2)
@@ -1103,7 +1103,7 @@ from sklearn.metrics import mean_absolute_error
 print('mae: ', mean_absolute_error(y_test, y_pred))
 
 import pickle
-pickle.dump(pl_svm, open("pl_svm.p", "wb" ))
+pickle.dump(pl_svm, open("stock_data\\pl_svm.p", "wb" ))
 
 
 # ==============================================================================
@@ -1171,7 +1171,7 @@ print('test mse: ',
       mean_squared_error(y_test, y_pred))
 
 import pickle
-pickle.dump(pl_decTree, open("pl_decTree.p", "wb" ))
+pickle.dump(pl_decTree, open("stock_data\\pl_decTree.p", "wb" ))
 
 
 # ==============================================================================
@@ -1235,7 +1235,7 @@ print('train mse: ', mean_squared_error(y_train, pl_decTree.predict(X_train)))
 print('test mse: ', mean_squared_error(y_test, y_pred))
 
 import pickle
-pickle.dump(pl_decTree, open("pl_decTree.p", "wb" ))
+pickle.dump(pl_decTree, open("stock_data\\pl_decTree.p", "wb" ))
 
 
 # ==============================================================================
@@ -1330,7 +1330,7 @@ print('train mse: ', mean_squared_error(y_train, pl_decTree.predict(X_train)))
 print('test mse: ', mean_squared_error(y_test, y_pred))
 
 import pickle
-pickle.dump(pl_decTree, open("pl_decTree.p", "wb" ))
+pickle.dump(pl_decTree, open("stock_data\\pl_decTree.p", "wb" ))
 
 
 # ==============================================================================
@@ -1421,7 +1421,7 @@ print('test mse: ',
                          y_pred))
 
 import pickle
-pickle.dump(rfregressor, open("pl_rfregressor.p", "wb" ))
+pickle.dump(rfregressor, open("stock_data\\pl_rfregressor.p", "wb" ))
 
 
 # ==============================================================================
@@ -1440,7 +1440,7 @@ print('test mse: ',
                          y_pred_ET))
 
 import pickle
-pickle.dump(ETregressor, open("pl_ETregressor.p", "wb" ))
+pickle.dump(ETregressor, open("stock_data\\pl_ETregressor.p", "wb" ))
 
 
 # ==============================================================================
@@ -1574,7 +1574,7 @@ print('train mse: ', mean_squared_error(y_train, pl_GradBregressor.predict(X_tra
 print('test mse: ', mean_squared_error(y_test, y_pred))
 
 import pickle
-pickle.dump(pl_GradBregressor, open("pl_GradBregressor.p", "wb" ))
+pickle.dump(pl_GradBregressor, open("stock_data\\pl_GradBregressor.p", "wb" ))
 
 
 # ==============================================================================

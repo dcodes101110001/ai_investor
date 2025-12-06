@@ -110,7 +110,7 @@ def getYPricesReportDateAndTargetDate(x, d, modifier=365):
 # Cell 7
 # ==============================================================================
 
-def getYRawData2024(my_path = 'C:/Users/damon/OneDrive/BYO_Investing_AI/2024/Stock_Data/SimFin2024/'):
+def getYRawData2024(my_path = 'stock_data\\'):
     d=pd.read_csv(my_path + 'us-shareprices-daily.csv', delimiter=';')
     d["Date"]=pd.to_datetime(d["Date"])
     print('Stock Price data matrix is: ',d.shape)
@@ -134,7 +134,7 @@ def getYPricesReportDate(X, d, modifier=365):
         i=i+1
     return y
 
-def getXFullDataMerged(myLocalPath='C:/Users/damon/OneDrive/BYO_Investing_AI/2024/Stock_Data/SimFin2024/'):
+def getXFullDataMerged(myLocalPath='stock_data\\'):
     '''
     For combining fundamentals financial data from SimFin+ only,
     without API. 
@@ -297,8 +297,8 @@ X["Market Cap"] = y2["Open Price"]*X["Shares (Diluted)_x"]
 # Cell 17
 # ==============================================================================
 
-X.to_csv("Annual_Stock_Price_Fundamentals_Filtered_2024_present.csv")
-y2.to_csv("Tickers_Dates_2024_present.csv")
+X.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Filtered_2024_present.csv")
+y2.to_csv("stock_data\\Tickers_Dates_2024_present.csv")
 
 
 # ==============================================================================
@@ -454,7 +454,7 @@ def fixXRatios(X):
 # Cell 21
 # ==============================================================================
 
-X=pd.read_csv("Annual_Stock_Price_Fundamentals_Filtered_2024_present.csv", 
+X=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Filtered_2024_present.csv", 
               index_col=0)
 
 # Net Income fix, checked annual reports.
@@ -464,7 +464,7 @@ fixNansInX(X)
 addColsToX(X)
 X=getXRatios(X)
 fixXRatios(X)
-X.to_csv("Annual_Stock_Price_Fundamentals_Ratios_2024.csv")
+X.to_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_2024.csv")
 
 
 # ==============================================================================
@@ -591,19 +591,19 @@ def pickStockForMe():
     Outputs a DataFrame of best picks.
     '''
     # Training X and Y of all previous year data
-    X=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios.csv", 
+    X=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios.csv", 
                   index_col=0)
     # annual stock performances
-    yperf=pd.read_csv("Annual_Stock_Price_Performance_Percentage.csv", 
+    yperf=pd.read_csv("stock_data\\Annual_Stock_Price_Performance_Percentage.csv", 
                       index_col=0)
     
     yperf=yperf["Perf"]
 
     # Stock selection ratios for 2024 X
-    X_2024=pd.read_csv("Annual_Stock_Price_Fundamentals_Ratios_2024.csv"
+    X_2024=pd.read_csv("stock_data\\Annual_Stock_Price_Fundamentals_Ratios_2024.csv"
                        , index_col=0)
     # And the row tickers
-    tickers=pd.read_csv("Tickers_Dates_2024_present.csv", index_col=0)
+    tickers=pd.read_csv("stock_data\\Tickers_Dates_2024_present.csv", index_col=0)
     
     # Gradient Boosted tree
     #model_pl = traingbregressorModel(X, yperf)
