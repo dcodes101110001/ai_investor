@@ -30,6 +30,8 @@ Added automatic splitting of large files:
 ### 3. Fixed Branch Name
 Changed default branch from "data-updates" to "data-update" throughout the workflow.
 
+**Note:** Some historical documentation files in the repository still reference "data-updates" (the old name). These files were created by previous workflow iterations and are not critical to workflow functionality. The workflow itself has been updated to use "data-update" as specified in the requirements.
+
 ### 4. Simplified Authentication
 Made GIT_PAT optional - workflow will try default GITHUB_TOKEN first, falling back to GIT_PAT if needed.
 
@@ -112,7 +114,7 @@ If additional data sources are added that produce large files:
 
 To change the chunk size (currently 50MB):
 - Edit `.github/workflows/download-simfin-data.yml`
-- Line ~176: Change `split -b 50M` to desired size
+- Line 178: Change `split -b 50M` to desired size
 - Recommended: Keep under 90MB to avoid GitHub warnings
 
 ## Troubleshooting
