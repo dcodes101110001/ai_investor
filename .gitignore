@@ -17,3 +17,7 @@ ENV/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Stock data files (large CSV files downloaded from SimFin)
+stock_data/
+*.csv
