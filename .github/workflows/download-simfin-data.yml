@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1  # Shallow clone to reduce checkout time and data transfer
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -79,6 +81,14 @@ jobs:
           echo "Configuring Git for automated commits..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Increase buffer size to handle large payloads (150MB)
+          git config --global http.postBuffer 157286400
+          
+          # Configure timeout settings for better reliability
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 60
+          
           echo "✓ Git configured successfully"
       
       - name: Check for changes
@@ -118,22 +128,40 @@ jobs:
         run: |
           echo "Pushing changes to remote repository..."
           
-          # Push with error handling
-          if git push; then
-            echo "✓ Changes pushed successfully to branch: ${{ github.ref_name }}"
-            echo ""
-            echo "Summary:"
-            echo "  - Data downloaded and committed"
-            echo "  - Branch: ${{ github.ref_name }}"
-            echo "  - Commit: $(git rev-parse HEAD)"
-          else
-            echo "❌ Failed to push changes"
-            echo "This may happen if:"
-            echo "  - The branch has been updated since checkout"
-            echo "  - Network connectivity issues"
-            echo "Please check the workflow run logs for details"
-            exit 1
-          fi
+          # Push with retry logic to handle transient network issues
+          max_attempts=3
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "Push attempt $attempt of $max_attempts..."
+            
+            if git push; then
+              echo "✓ Changes pushed successfully to branch: ${{ github.ref_name }}"
+              echo ""
+              echo "Summary:"
+              echo "  - Data downloaded and committed"
+              echo "  - Branch: ${{ github.ref_name }}"
+              echo "  - Commit: $(git rev-parse HEAD)"
+              exit 0
+            else
+              echo "⚠️ Push attempt $attempt failed"
+              
+              if [ $attempt -lt $max_attempts ]; then
+                wait_time=$((attempt * 10))
+                echo "Waiting ${wait_time} seconds before retry..."
+                sleep $wait_time
+                attempt=$((attempt + 1))
+              else
+                echo "❌ Failed to push changes after $max_attempts attempts"
+                echo "This may happen if:"
+                echo "  - The branch has been updated since checkout"
+                echo "  - Network connectivity issues"
+                echo "  - Large file transfer timeout"
+                echo "Please check the workflow run logs for details"
+                exit 1
+              fi
+            fi
+          done
       
       - name: Upload data as artifact
         if: always()
