@@ -456,7 +456,8 @@ jobs:
           # Push with retry logic to handle transient network issues
           max_attempts=3
           attempt=1
-          push_error_log="/tmp/git_push_error.log"
+          # Use unique temp file to avoid conflicts with concurrent runs
+          push_error_log="/tmp/git_push_error_${{ github.run_id }}.log"
           
           while [ $attempt -le $max_attempts ]; do
             echo "Push attempt $attempt of $max_attempts..."

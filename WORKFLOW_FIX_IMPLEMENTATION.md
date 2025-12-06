@@ -14,9 +14,10 @@ error: failed to push some refs to 'https://github.com/dcodes101110001/ai_invest
 ### Issue Identified
 
 1. **GitHub Security Restriction**: GitHub prevents Git LFS uploads to public forks, even with valid Personal Access Tokens (PAT) configured
-2. **Unexpected Files**: The SimFin library downloads both CSV and ZIP files:
-   - CSV files (needed) - financial data in usable format
-   - ZIP files (intermediate) - compressed archives that SimFin extracts to CSV
+2. **Unexpected Files**: The SimFin library downloads financial data in two forms:
+   - **ZIP files** (intermediate): Compressed archives downloaded from SimFin API
+   - **CSV files** (final): Extracted from ZIP files, containing the actual financial data in tabular format
+   - The SimFin Python library automatically downloads ZIPs, extracts them to CSVs, and keeps both
 3. **Git LFS Tracking**: While `.gitattributes` only tracked `*.csv` files, the ZIP files were still being added to the repository
 4. **Authentication Working**: The GIT_PAT secret was properly configured, but the issue was architectural, not credential-related
 
@@ -191,7 +192,7 @@ stock_data/
 ## Alternative Solutions Considered
 
 ### Option 1: Remove Git LFS Entirely
-**Rejected**: Large CSV files (400MB+) would bloat repository history
+**Rejected**: Large CSV files (us-shareprices-daily.csv is ~414MB based on workflow logs) would bloat repository history and make clones very slow
 
 ### Option 2: Make Repository Private
 **Rejected**: User preference for public repository; unnecessary restriction
