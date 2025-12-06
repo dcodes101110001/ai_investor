@@ -24,6 +24,12 @@ wheels/
 # stock_data/*.csv
 # stock_data/**/*.csv
 
+# SimFin downloaded ZIP archives - not needed in version control
+# These are intermediate files that are extracted to CSV
+stock_data/download/*.zip
+stock_data/**/*.zip
+*.zip
+
 # Virtual environments
 venv/
 ENV/

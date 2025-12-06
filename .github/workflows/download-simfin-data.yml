@@ -161,6 +161,32 @@ jobs:
           
           echo "✓ Git configured successfully"
       
+      - name: Clean up intermediate files
+        run: |
+          echo "Cleaning up intermediate download files..."
+          
+          # Remove ZIP files - they are intermediate files that are not needed in version control
+          # The CSV files extracted from these ZIPs are the actual data we want to track
+          if [ -d "stock_data" ]; then
+            # Count ZIP files before removal
+            zip_count=$(find stock_data -type f -name "*.zip" 2>/dev/null | wc -l)
+            
+            if [ "$zip_count" -gt 0 ]; then
+              echo "Found $zip_count ZIP file(s) to remove"
+              find stock_data -type f -name "*.zip" -delete
+              echo "✓ ZIP files removed (CSV files retained)"
+            else
+              echo "No ZIP files found - nothing to clean up"
+            fi
+            
+            # Show what will be committed
+            echo ""
+            echo "Files that will be tracked in version control:"
+            find stock_data -type f -name "*.csv" 2>/dev/null | head -10 || echo "No CSV files found"
+          else
+            echo "⚠️ stock_data directory does not exist"
+          fi
+      
       - name: Check for changes
         id: check_changes
         run: |
@@ -421,16 +447,25 @@ jobs:
           echo "Checking Git LFS status..."
           git lfs status || echo "No LFS objects yet"
           
+          # Display what will be pushed
+          echo ""
+          echo "Files to be pushed:"
+          git diff --stat HEAD~1 2>/dev/null || git diff --stat --cached || echo "No diff available"
+          echo ""
+          
           # Push with retry logic to handle transient network issues
           max_attempts=3
           attempt=1
+          # Use unique temp file to avoid conflicts with concurrent runs
+          push_error_log="/tmp/git_push_error_${{ github.run_id }}.log"
           
           while [ $attempt -le $max_attempts ]; do
             echo "Push attempt $attempt of $max_attempts..."
             echo "Pushing to branch: $TARGET_BRANCH"
             
             # Push commits and LFS objects to the data updates branch
-            if git push origin "$TARGET_BRANCH"; then
+            # Capture both stdout and stderr for better error diagnosis
+            if git push origin "$TARGET_BRANCH" 2>&1 | tee "$push_error_log"; then
               echo "✓ Changes pushed successfully to branch: $TARGET_BRANCH"
               echo ""
               echo "Summary:"
@@ -448,7 +483,46 @@ jobs:
               
               exit 0
             else
-              echo "⚠️ Push attempt $attempt failed"
+              # Capture the exit code
+              push_exit_code=$?
+              echo "⚠️ Push attempt $attempt failed with exit code: $push_exit_code"
+              
+              # Check if it's the known LFS fork restriction error
+              if grep -q "can not upload new objects to public fork" "$push_error_log" 2>/dev/null; then
+                echo ""
+                echo "═══════════════════════════════════════════════════════════════"
+                echo "  DETECTED: Git LFS Public Fork Restriction"
+                echo "═══════════════════════════════════════════════════════════════"
+                echo ""
+                echo "GitHub prevents Git LFS uploads to public forks for security."
+                echo "This is a known limitation, not a credentials issue."
+                echo ""
+                echo "Files causing the issue:"
+                git lfs ls-files 2>/dev/null || echo "No LFS files detected"
+                echo ""
+                echo "DIAGNOSIS:"
+                echo "----------"
+                echo "✓ Authentication appears correct (GIT_PAT is configured)"
+                echo "✗ Git LFS is attempting to upload files to a public fork"
+                echo "✗ GitHub blocks LFS uploads to public forks even with valid PAT"
+                echo ""
+                echo "RECOMMENDED SOLUTIONS:"
+                echo "---------------------"
+                echo "1. Remove large files from Git LFS tracking:"
+                echo "   - Check .gitattributes for patterns tracking unwanted files"
+                echo "   - Add large files (e.g., *.zip) to .gitignore instead"
+                echo "   - Only track essential data files with LFS"
+                echo ""
+                echo "2. Alternative: Make repository private (if acceptable)"
+                echo "   - Go to Settings → Danger Zone → Change visibility"
+                echo "   - This removes the fork restriction"
+                echo ""
+                echo "3. Use artifacts instead of Git for large data:"
+                echo "   - Data is already uploaded as workflow artifacts"
+                echo "   - Available for 30 days in Actions tab"
+                echo ""
+                exit 1
+              fi
               
               if [ $attempt -lt $max_attempts ]; then
                 wait_time=$((attempt * 10))
@@ -462,12 +536,16 @@ jobs:
                 echo "  PUSH FAILED: AUTHENTICATION OR PERMISSIONS ISSUE"
                 echo "═══════════════════════════════════════════════════════════════"
                 echo ""
+                echo "Error details from git push:"
+                cat "$push_error_log" 2>/dev/null || echo "No error log available"
+                echo ""
                 echo "Common causes:"
                 echo "  • Missing or invalid GIT_PAT secret"
                 echo "  • PAT lacks required scopes (repo, workflow)"
                 echo "  • PAT has expired"
                 echo "  • Network connectivity issues"
                 echo "  • Git LFS quota exceeded"
+                echo "  • Branch protection rules blocking push"
                 echo ""
                 echo "If you see: '@github-actions[bot] can not upload new objects'"
                 echo "  → This means GIT_PAT is not configured or invalid"
