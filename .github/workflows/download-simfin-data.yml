@@ -194,8 +194,17 @@ jobs:
           if git show-ref --verify --quiet "refs/remotes/origin/$TARGET_BRANCH"; then
             echo "Checking out existing branch: $TARGET_BRANCH"
             git fetch origin "$TARGET_BRANCH"
-            git checkout "$TARGET_BRANCH"
-            git merge --no-edit "$CURRENT_BRANCH" -X theirs
+            # Use -B to create or reset the branch to track origin
+            git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+            # Merge changes from current branch
+            # Using -X theirs strategy: In case of conflicts, prefer incoming changes
+            # This is safe because we're merging automated data downloads
+            git merge --no-edit "$CURRENT_BRANCH" -X theirs || {
+              echo "⚠️ Merge conflict detected"
+              echo "Aborting merge and using current branch state"
+              git merge --abort
+              git checkout -B "$TARGET_BRANCH"
+            }
           else
             echo "Creating new branch: $TARGET_BRANCH"
             git checkout -b "$TARGET_BRANCH"
@@ -214,6 +223,7 @@ jobs:
             echo "Setting up Personal Access Token authentication..."
             
             # Configure Git to use the PAT
+            # Note: GitHub automatically masks secrets in logs, so the token won't be exposed
             git remote set-url origin "https://x-access-token:${GITHUB_PAT}@github.com/${{ github.repository }}.git"
             
             echo "✓ Personal Access Token configured"
