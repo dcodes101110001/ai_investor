@@ -5,6 +5,11 @@
 # PURPOSE:
 #   Automatically downloads financial data from SimFin API and commits it
 #   to a dedicated branch (data-update) for review and merging.
+#   
+#   The workflow performs the following operations:
+#   1. Downloads data to data-update branch with large files split for Git
+#   2. Combines split files back into single CSV files
+#   3. Pushes combined CSV files to the main branch automatically
 # 
 # SCHEDULE:
 #   Runs daily at 2 AM UTC (automatic)
@@ -577,6 +582,171 @@ jobs:
             fi
           done
       
+      - name: Combine split files
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          echo "Combining split CSV files into single files..."
+          
+          if [ -d "stock_data" ]; then
+            # Find all .part000 files (the first part of split files)
+            part_files=$(find stock_data -type f -name "*.part000" 2>/dev/null || true)
+            
+            if [ -n "$part_files" ]; then
+              echo "Found split files to combine:"
+              echo "$part_files"
+              echo ""
+              
+              for first_part in $part_files; do
+                # Get the original filename (remove .part000 suffix)
+                original_file="${first_part%.part000}"
+                filename=$(basename "$original_file")
+                dirname=$(dirname "$original_file")
+                
+                echo "Combining parts for: $filename"
+                
+                # Combine all parts into the original filename
+                # This will cat all .part* files in order (part000, part001, part002, etc.)
+                cat "${original_file}".part* > "$original_file"
+                
+                # Verify the combined file was created
+                if [ -f "$original_file" ]; then
+                  combined_size=$(stat -f%z "$original_file" 2>/dev/null || stat -c%s "$original_file" 2>/dev/null || echo "unknown")
+                  echo "✓ Combined file created: $filename (size: $combined_size bytes)"
+                else
+                  echo "❌ Failed to create combined file: $filename"
+                  exit 1
+                fi
+              done
+              
+              echo ""
+              echo "All split files combined successfully"
+            else
+              echo "No split files found - nothing to combine"
+            fi
+          else
+            echo "⚠️ stock_data directory does not exist"
+          fi
+      
+      - name: Push combined files to main branch
+        if: steps.check_changes.outputs.has_changes == 'true'
+        env:
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+        run: |
+          echo "Preparing to push combined CSV files to main branch..."
+          
+          # Store current branch name
+          DATA_BRANCH="${{ vars.DATA_BRANCH || 'data-update' }}"
+          
+          # Create a temporary directory for combined files
+          TEMP_DIR="/tmp/combined_csv_files"
+          mkdir -p "$TEMP_DIR"
+          
+          # Copy only the combined CSV files (not .part* files) to temp directory
+          echo "Copying combined CSV files to temporary directory..."
+          find stock_data -type f -name "*.csv" ! -name "*.part*" -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
+          
+          # Count the files copied
+          file_count=$(find "$TEMP_DIR" -type f -name "*.csv" 2>/dev/null | wc -l)
+          echo "Number of combined CSV files to push: $file_count"
+          
+          if [ "$file_count" -eq 0 ]; then
+            echo "⚠️ No combined CSV files found to push to main branch"
+            echo "This might be because all files were small enough to not need splitting"
+            # Copy all CSV files if no combined files exist
+            find stock_data -type f -name "*.csv" -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
+            file_count=$(find "$TEMP_DIR" -type f -name "*.csv" 2>/dev/null | wc -l)
+            echo "Copying all CSV files instead: $file_count files"
+          fi
+          
+          if [ "$file_count" -eq 0 ]; then
+            echo "⚠️ No CSV files found at all - skipping main branch push"
+            exit 0
+          fi
+          
+          # Fetch and checkout main branch
+          echo "Fetching main branch from remote..."
+          git fetch origin main || {
+            echo "⚠️ Main branch does not exist yet. Creating it..."
+            git checkout -b main
+            git push origin main
+            git fetch origin main
+          }
+          
+          echo "Checking out main branch..."
+          git checkout main
+          
+          # Ensure stock_data directory exists on main branch
+          mkdir -p stock_data
+          
+          # Copy combined files to stock_data directory on main branch
+          echo "Copying combined CSV files to main branch stock_data directory..."
+          cp "$TEMP_DIR"/*.csv stock_data/ 2>/dev/null || {
+            echo "❌ Failed to copy files to stock_data directory"
+            exit 1
+          }
+          
+          # Check if there are changes to commit
+          git add stock_data/
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit on main branch (files already up-to-date)"
+          else
+            echo "Changes detected in stock_data directory on main branch"
+            echo "Modified/added files:"
+            git diff --staged --name-status
+            
+            # Commit the changes
+            current_date=$(date -u +"%Y-%m-%d %H:%M:%S")
+            git commit -m "chore: update combined CSV files - $current_date UTC"
+            echo "✓ Changes committed to main branch"
+            
+            # Push to main branch
+            echo "Pushing combined CSV files to main branch..."
+            
+            # Configure authentication if GIT_PAT is available
+            if [ -n "$GIT_PAT" ]; then
+              git remote set-url origin "https://x-access-token:${GIT_PAT}@github.com/${{ github.repository }}.git"
+            fi
+            
+            # Push with retry logic
+            max_attempts=3
+            attempt=1
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Push attempt $attempt of $max_attempts to main branch..."
+              
+              if git push origin main; then
+                echo "✓ Combined CSV files pushed successfully to main branch"
+                echo ""
+                echo "Summary:"
+                echo "  - Combined CSV files committed to main branch"
+                echo "  - Files updated: $file_count"
+                echo "  - Branch: main"
+                echo "  - Commit: $(git rev-parse HEAD)"
+                break
+              else
+                push_exit_code=$?
+                echo "⚠️ Push attempt $attempt failed with exit code: $push_exit_code"
+                
+                if [ $attempt -lt $max_attempts ]; then
+                  wait_time=$((attempt * 10))
+                  echo "Waiting ${wait_time} seconds before retry..."
+                  sleep $wait_time
+                  attempt=$((attempt + 1))
+                else
+                  echo "❌ Failed to push to main branch after $max_attempts attempts"
+                  echo ""
+                  echo "Note: Split files were still pushed to $DATA_BRANCH branch successfully"
+                  exit 1
+                fi
+              fi
+            done
+          fi
+          
+          # Switch back to data branch
+          echo "Switching back to $DATA_BRANCH branch..."
+          git checkout "$DATA_BRANCH"
+      
       - name: Upload data as artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -615,7 +785,11 @@ jobs:
             echo "### Git Status" >> $GITHUB_STEP_SUMMARY
             echo "✅ **Changes committed and pushed to repository**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Branch: \`$TARGET_BRANCH\`" >> $GITHUB_STEP_SUMMARY
+            echo "**Data Update Branch:** \`$TARGET_BRANCH\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Split files committed for Git compatibility" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Main Branch:** \`main\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Combined CSV files pushed automatically" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "Latest commit: \`$(git rev-parse --short HEAD)\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY

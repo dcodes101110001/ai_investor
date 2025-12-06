@@ -2,7 +2,7 @@
 
 This directory is used to store financial data downloaded from SimFin.
 
-The data files (CSV) are automatically downloaded by the GitHub Actions workflow and committed to the `data-update` branch.
+The data files (CSV) are automatically downloaded by the GitHub Actions workflow.
 
 ## Data Sources
 
@@ -11,13 +11,26 @@ The data files (CSV) are automatically downloaded by the GitHub Actions workflow
 
 ## Automated Downloads
 
-The workflow `.github/workflows/download-simfin-data.yml` runs daily at 2 AM UTC to download the latest data to the `data-update` branch.
+The workflow `.github/workflows/download-simfin-data.yml` runs daily at 2 AM UTC to download the latest data.
+
+**Workflow Process:**
+1. Downloads data to the `data-update` branch with large files split into 50MB chunks (for GitHub compatibility)
+2. Combines split files back into single CSV files
+3. Pushes the combined CSV files to the `main` branch automatically
+
+**Result:**
+- `data-update` branch: Contains split files (*.part*) for large CSVs
+- `main` branch: Contains combined, ready-to-use CSV files in the `stock_data` directory
 
 ## Large File Handling
 
-Due to GitHub's 100MB file size limit, large CSV files (particularly `us-shareprices-daily.csv`) are automatically split into 50MB chunks with `.part*` extensions.
+Due to GitHub's 100MB file size limit, large CSV files (particularly `us-shareprices-daily.csv`) are automatically split into 50MB chunks with `.part*` extensions on the `data-update` branch.
 
-To reconstruct split files:
+**Note:** You don't need to manually reconstruct split files. The workflow automatically combines them and pushes the complete CSV files to the `main` branch.
+
+### Manual Reconstruction (if needed)
+
+To reconstruct split files manually:
 ```bash
 # Example: Reconstruct us-shareprices-daily.csv from split parts
 # Run from repository root
