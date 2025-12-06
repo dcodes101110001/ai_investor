@@ -1,11 +1,8 @@
 # Git LFS Configuration for AI Investor Repository
-# This file configures Git Large File Storage (LFS) to handle large data files efficiently
+# Git LFS is disabled for CSV files because GitHub restricts LFS uploads to public forks
+# CSV files in stock_data/ will be committed directly without LFS
 
-# Track all CSV files in the stock_data directory with Git LFS
-stock_data/*.csv filter=lfs diff=lfs merge=lfs -text
-stock_data/**/*.csv filter=lfs diff=lfs merge=lfs -text
-
-# Track other potentially large data files
+# Track other potentially large data files (excluding CSV)
 *.parquet filter=lfs diff=lfs merge=lfs -text
 *.hdf5 filter=lfs diff=lfs merge=lfs -text
 *.h5 filter=lfs diff=lfs merge=lfs -text
