@@ -1,0 +1,101 @@
+name: Download SimFin Data
+
+# Run daily at 2 AM UTC
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  download-data:
+    name: Download SimFin Financial Data
+    runs-on: ubuntu-latest
+    
+    # Limit GITHUB_TOKEN permissions to minimum required
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Verify stock_data directory
+        run: |
+          echo "Checking if stock_data directory exists..."
+          if [ ! -d "stock_data" ]; then
+            echo "stock_data directory does not exist. Creating it..."
+            mkdir -p stock_data
+            echo "✓ stock_data directory created"
+          else
+            echo "✓ stock_data directory already exists"
+          fi
+          ls -la stock_data/ || echo "Directory is empty"
+      
+      - name: Install dependencies
+        run: |
+          echo "Installing Python dependencies..."
+          python -m pip install --upgrade pip
+          pip install simfin
+          echo "✓ Dependencies installed successfully"
+      
+      - name: Download SimFin data
+        env:
+          SIMFIN_API_KEY: ${{ secrets.SIMFIN_API_KEY }}
+        run: |
+          echo "Starting SimFin data download..."
+          python scripts/download_simfin_data.py
+        continue-on-error: false
+      
+      - name: Verify downloaded data
+        run: |
+          echo "Verifying downloaded data files..."
+          echo "Contents of stock_data directory:"
+          ls -lh stock_data/ || echo "No files found in stock_data directory"
+          
+          # Count the number of files
+          file_count=$(find stock_data -type f -name "*.csv" 2>/dev/null | wc -l)
+          echo "Number of CSV files downloaded: $file_count"
+          
+          if [ "$file_count" -eq 0 ]; then
+            echo "⚠️ Warning: No CSV files were downloaded"
+            echo "Possible causes:"
+            echo "  - Invalid or missing SIMFIN_API_KEY secret"
+            echo "  - Network connectivity issues"
+            echo "  - SimFin API service unavailable"
+            echo "  - API rate limit exceeded"
+            exit 1
+          else
+            echo "✓ Download verification successful"
+          fi
+      
+      - name: Upload data as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simfin-data-${{ github.run_number }}
+          path: stock_data/
+          retention-days: 30
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## SimFin Data Download Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -d "stock_data" ]; then
+            echo "### Downloaded Files" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            ls -lh stock_data/ 2>/dev/null || echo "No files" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ stock_data directory not found" >> $GITHUB_STEP_SUMMARY
+          fi
