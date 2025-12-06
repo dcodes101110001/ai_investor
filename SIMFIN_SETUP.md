@@ -42,9 +42,11 @@ You can manually trigger the workflow to verify it works:
 1. Go to the **Actions** tab in your repository
 2. Select the **Download SimFin Data** workflow from the left sidebar
 3. Click the **Run workflow** button
-4. Select the branch and click **Run workflow**
-5. Wait for the workflow to complete
-6. Check the logs to ensure data was downloaded successfully
+4. Select the branch you want to update (e.g., `main`)
+5. Click **Run workflow**
+6. Wait for the workflow to complete (typically 2-5 minutes)
+7. Check the logs to ensure data was downloaded successfully
+8. Verify that new data files appear in the `stock_data/` directory with a new commit
 
 ### Expected Behavior
 
@@ -55,6 +57,17 @@ When the workflow runs successfully:
 - ✅ Logs will show the number of rows downloaded for each dataset
 - ✅ A workflow artifact containing the data will be created
 - ✅ The repository will contain the latest financial data
+- ✅ A new commit by `github-actions[bot]` will appear in the commit history with message like "chore: update SimFin data - YYYY-MM-DD HH:MM:SS UTC"
+
+### Verifying the Commit
+
+After a successful workflow run:
+
+1. Go to the repository's main page
+2. Check the latest commit - it should be from `github-actions[bot]`
+3. Click on the commit to see the changes
+4. Verify that files in `stock_data/` were added or modified
+5. Navigate to the `stock_data/` directory to see the CSV files
 
 ### Troubleshooting
 
@@ -74,6 +87,13 @@ If the workflow fails:
    - Network issues: Temporary connectivity problems (workflow will retry next day)
    - API rate limits: Free accounts have download limits
    - SimFin service down: Check SimFin's status page
+   - Push failures: May occur if the branch was updated during workflow execution
+   
+4. **Auto-commit specific issues:**
+   - **Permission denied on push:** Ensure the workflow has `contents: write` permission
+   - **No changes committed:** This is normal if the data hasn't changed since the last download
+   - **Merge conflicts:** Should not occur as the workflow only modifies files in `stock_data/`
+   - **Bot commits not appearing:** Check that the workflow completed successfully and didn't fail at the push step
 
 ## Accessing Downloaded Data
 
