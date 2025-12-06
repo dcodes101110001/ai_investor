@@ -19,6 +19,8 @@ This repository includes a GitHub Actions workflow that automatically downloads 
 2. Add it as a repository secret named `SIMFIN_API_KEY`
 3. See [SIMFIN_SETUP.md](SIMFIN_SETUP.md) for detailed setup instructions
 
+**For Public Forks:** If you've forked this repository, you'll need to set up authentication for the workflow to push data updates. See [WORKFLOW_AUTHENTICATION_SETUP.md](WORKFLOW_AUTHENTICATION_SETUP.md) for step-by-step instructions using either SSH Deploy Keys (recommended) or Personal Access Tokens.
+
 The data is saved to the `stock_data/` directory and refreshed daily.
 
 ## Disclaimer

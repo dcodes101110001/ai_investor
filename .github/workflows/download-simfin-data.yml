@@ -15,6 +15,7 @@ jobs:
     # Grant write permissions to commit and push data changes
     permissions:
       contents: write
+      pull-requests: write
     
     steps:
       - name: Checkout repository
@@ -150,18 +151,95 @@ jobs:
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
       
+      - name: Setup SSH Deploy Key (if available)
+        if: steps.check_changes.outputs.has_changes == 'true' && vars.USE_SSH_AUTH == 'true'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+        run: |
+          if [ -n "$SSH_PRIVATE_KEY" ]; then
+            echo "Setting up SSH authentication..."
+            mkdir -p ~/.ssh
+            chmod 700 ~/.ssh
+            
+            # Add the private key
+            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+            
+            # Add GitHub to known hosts
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            chmod 644 ~/.ssh/known_hosts
+            
+            # Configure Git to use SSH
+            git remote set-url origin git@github.com:${{ github.repository }}.git
+            
+            echo "✓ SSH authentication configured"
+          else
+            echo "⚠️ SSH_DEPLOY_KEY secret not found, skipping SSH setup"
+          fi
+      
       - name: Commit changes
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
           echo "Committing changes to repository..."
           current_date=$(date -u +"%Y-%m-%d %H:%M:%S")
+          
+          # Define the target branch for data updates
+          TARGET_BRANCH="${{ vars.DATA_BRANCH || 'data-updates' }}"
+          CURRENT_BRANCH="${{ github.ref_name }}"
+          
+          echo "Current branch: $CURRENT_BRANCH"
+          echo "Target branch for data updates: $TARGET_BRANCH"
+          
+          # Create or checkout the data updates branch
+          if git show-ref --verify --quiet "refs/remotes/origin/$TARGET_BRANCH"; then
+            echo "Checking out existing branch: $TARGET_BRANCH"
+            git fetch origin "$TARGET_BRANCH"
+            # Use -B to create or reset the branch to track origin
+            git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+            # Merge changes from current branch
+            # Using -X theirs strategy: In case of conflicts, prefer incoming changes
+            # This is safe because we're merging automated data downloads
+            git merge --no-edit "$CURRENT_BRANCH" -X theirs || {
+              echo "⚠️ Merge conflict detected"
+              echo "Aborting merge and using current branch state"
+              git merge --abort
+              git checkout -B "$TARGET_BRANCH"
+            }
+          else
+            echo "Creating new branch: $TARGET_BRANCH"
+            git checkout -b "$TARGET_BRANCH"
+          fi
+          
+          # Commit the changes
           git commit -m "chore: update SimFin data - $current_date UTC"
-          echo "✓ Changes committed successfully"
+          echo "✓ Changes committed successfully to branch: $TARGET_BRANCH"
+      
+      - name: Setup Personal Access Token (if SSH not used)
+        if: steps.check_changes.outputs.has_changes == 'true' && vars.USE_SSH_AUTH != 'true'
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+        run: |
+          if [ -n "$GITHUB_PAT" ]; then
+            echo "Setting up Personal Access Token authentication..."
+            
+            # Configure Git to use the PAT
+            # Note: GitHub automatically masks secrets in logs, so the token won't be exposed
+            git remote set-url origin "https://x-access-token:${GITHUB_PAT}@github.com/${{ github.repository }}.git"
+            
+            echo "✓ Personal Access Token configured"
+          else
+            echo "⚠️ GITHUB_PAT secret not found"
+            echo "Using default GITHUB_TOKEN (may have limited permissions on forks)"
+            git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          fi
       
       - name: Push changes
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
           echo "Pushing changes to remote repository with Git LFS..."
+          
+          # Get the target branch name
+          TARGET_BRANCH="${{ vars.DATA_BRANCH || 'data-updates' }}"
           
           # Verify LFS objects are ready
           echo "Checking Git LFS status..."
@@ -173,15 +251,19 @@ jobs:
           
           while [ $attempt -le $max_attempts ]; do
             echo "Push attempt $attempt of $max_attempts..."
+            echo "Pushing to branch: $TARGET_BRANCH"
             
-            # Push commits and LFS objects (using origin HEAD for explicit branch)
-            if git push origin HEAD; then
-              echo "✓ Changes pushed successfully to branch: ${{ github.ref_name }}"
+            # Push commits and LFS objects to the data updates branch
+            if git push origin "$TARGET_BRANCH"; then
+              echo "✓ Changes pushed successfully to branch: $TARGET_BRANCH"
               echo ""
               echo "Summary:"
               echo "  - Data downloaded and committed"
-              echo "  - Branch: ${{ github.ref_name }}"
+              echo "  - Branch: $TARGET_BRANCH"
               echo "  - Commit: $(git rev-parse HEAD)"
+              echo ""
+              echo "📝 Note: Changes are on the '$TARGET_BRANCH' branch"
+              echo "   You can review and merge these changes into your main branch when ready."
               
               # Show LFS transfer summary if applicable
               echo ""
@@ -199,12 +281,19 @@ jobs:
                 attempt=$((attempt + 1))
               else
                 echo "❌ Failed to push changes after $max_attempts attempts"
+                echo ""
                 echo "This may happen if:"
+                echo "  - Authentication credentials are missing or invalid"
                 echo "  - The branch has been updated since checkout"
                 echo "  - Network connectivity issues"
                 echo "  - Large file transfer timeout"
                 echo "  - Git LFS quota exceeded"
-                echo "Please check the workflow run logs for details"
+                echo ""
+                echo "Required secrets (at least one):"
+                echo "  1. SSH_DEPLOY_KEY (for SSH authentication) + set USE_SSH_AUTH=true in repository variables"
+                echo "  2. GITHUB_PAT (for token authentication with repo and workflow scopes)"
+                echo ""
+                echo "Please check the workflow run logs and repository secrets configuration"
                 exit 1
               fi
             fi
@@ -221,11 +310,15 @@ jobs:
       - name: Summary
         if: always()
         run: |
+          # Get the target branch name
+          TARGET_BRANCH="${{ vars.DATA_BRANCH || 'data-updates' }}"
+          
           echo "## SimFin Data Download Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Workflow Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
           echo "**Date:** $(date -u)" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Source Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Branch:** $TARGET_BRANCH" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ -d "stock_data" ]; then
@@ -255,7 +348,16 @@ jobs:
             echo "### Git Status" >> $GITHUB_STEP_SUMMARY
             echo "✅ **Changes committed and pushed to repository**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Branch: \`$TARGET_BRANCH\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
             echo "Latest commit: \`$(git rev-parse --short HEAD)\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Authentication Method" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ vars.USE_SSH_AUTH }}" == "true" ]; then
+              echo "🔐 SSH Deploy Key (more secure)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "🔑 Personal Access Token or GITHUB_TOKEN" >> $GITHUB_STEP_SUMMARY
+            fi
           else
             echo "### Git Status" >> $GITHUB_STEP_SUMMARY
             echo "ℹ️ No changes detected (data already up-to-date)" >> $GITHUB_STEP_SUMMARY
