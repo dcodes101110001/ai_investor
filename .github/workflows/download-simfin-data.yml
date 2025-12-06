@@ -1,3 +1,37 @@
+# ============================================================================
+# SimFin Data Download Workflow
+# ============================================================================
+# 
+# PURPOSE:
+#   Automatically downloads financial data from SimFin API and commits it
+#   to a dedicated branch (data-updates) for review and merging.
+# 
+# SCHEDULE:
+#   Runs daily at 2 AM UTC (automatic)
+#   Can also be triggered manually via workflow_dispatch
+# 
+# REQUIRED SECRETS:
+#   1. SIMFIN_API_KEY (required)
+#      - Your SimFin API key for data access
+#      - Get it from: https://simfin.com/
+# 
+#   2. GITHUB_PAT (required for public forks)
+#      - Personal Access Token with 'repo' and 'workflow' scopes
+#      - Required for pushing Git LFS data to public forks
+#      - Setup instructions in the "Setup Personal Access Token" step below
+#      - Alternative: Use SSH_DEPLOY_KEY (see WORKFLOW_AUTHENTICATION_SETUP.md)
+# 
+# OPTIONAL CONFIGURATION:
+#   - DATA_BRANCH variable: Custom branch name (default: data-updates)
+#   - USE_SSH_AUTH variable: Set to 'true' to use SSH instead of PAT
+# 
+# DOCUMENTATION:
+#   - Full setup guide: WORKFLOW_AUTHENTICATION_SETUP.md
+#   - Git LFS setup: GIT_LFS_INTEGRATION.md
+#   - Troubleshooting: WORKFLOW_FIX_DOCUMENTATION.md
+# 
+# ============================================================================
+
 name: Download SimFin Data
 
 # Run daily at 2 AM UTC
@@ -151,12 +185,27 @@ jobs:
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
       
+      # SSH DEPLOY KEY AUTHENTICATION (ALTERNATIVE TO PAT)
+      # ===================================================
+      # This step configures SSH-based authentication as an alternative to PAT.
+      # SSH keys are more secure for production use as they're repository-specific.
+      # 
+      # TO USE SSH AUTHENTICATION:
+      # 1. Create an SSH key pair (see WORKFLOW_AUTHENTICATION_SETUP.md)
+      # 2. Add public key as Deploy Key in repository settings (with write access)
+      # 3. Add private key as SSH_DEPLOY_KEY secret
+      # 4. Set USE_SSH_AUTH=true in repository variables
+      # 
+      # This step only runs if USE_SSH_AUTH variable is set to 'true'
+      # Otherwise, the workflow uses GITHUB_PAT (see "Setup Personal Access Token" step below)
+      # 
       - name: Setup SSH Deploy Key (if available)
         if: steps.check_changes.outputs.has_changes == 'true' && vars.USE_SSH_AUTH == 'true'
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
         run: |
           if [ -n "$SSH_PRIVATE_KEY" ]; then
+            echo "✓ SSH_DEPLOY_KEY secret found"
             echo "Setting up SSH authentication..."
             mkdir -p ~/.ssh
             chmod 700 ~/.ssh
@@ -172,9 +221,18 @@ jobs:
             # Configure Git to use SSH
             git remote set-url origin git@github.com:${{ github.repository }}.git
             
-            echo "✓ SSH authentication configured"
+            echo "✓ SSH authentication configured successfully"
           else
-            echo "⚠️ SSH_DEPLOY_KEY secret not found, skipping SSH setup"
+            echo "❌ ERROR: USE_SSH_AUTH is enabled but SSH_DEPLOY_KEY secret not found"
+            echo ""
+            echo "To fix this issue, choose one of these options:"
+            echo "  1. Add SSH_DEPLOY_KEY secret (see WORKFLOW_AUTHENTICATION_SETUP.md)"
+            echo "  2. Disable SSH authentication:"
+            echo "     → Go to: Repository Settings → Secrets and variables → Actions → Variables tab"
+            echo "     → Find 'USE_SSH_AUTH' and delete it (or set value to 'false')"
+            echo "     → Then add GITHUB_PAT secret instead"
+            echo ""
+            exit 1
           fi
       
       - name: Commit changes
@@ -214,24 +272,142 @@ jobs:
           git commit -m "chore: update SimFin data - $current_date UTC"
           echo "✓ Changes committed successfully to branch: $TARGET_BRANCH"
       
+      # AUTHENTICATION SETUP FOR GIT PUSH WITH LFS
+      # ============================================
+      # This step configures authentication for pushing changes to the repository.
+      # 
+      # WHY IS THIS NEEDED?
+      # - This is a PUBLIC FORK, and GitHub restricts Git LFS uploads from forks using the default GITHUB_TOKEN
+      # - Error without proper auth: "@github-actions[bot] can not upload new objects to public fork"
+      # - The downloaded data files (~400MB+) are tracked by Git LFS and require elevated permissions
+      # 
+      # REQUIRED: GITHUB_PAT SECRET
+      # ---------------------------
+      # You MUST create a Personal Access Token (PAT) with the following scopes:
+      #   ✓ repo (Full control of private repositories)
+      #   ✓ workflow (Update GitHub Action workflows)
+      # 
+      # HOW TO SET UP THE GITHUB_PAT SECRET:
+      # 1. Create a Personal Access Token:
+      #    - Go to: https://github.com/settings/tokens
+      #    - Click "Generate new token" → "Generate new token (classic)"
+      #    - Token name: "GitHub Actions Workflow Data Upload"
+      #    - Select scopes: ✓ repo, ✓ workflow
+      #    - Set expiration (recommended: 90 days)
+      #    - Click "Generate token" and COPY IT (you won't see it again!)
+      # 
+      # 2. Add the token as a repository secret:
+      #    - Go to: Repository Settings → Secrets and variables → Actions
+      #    - Click "New repository secret"
+      #    - Name: GITHUB_PAT
+      #    - Value: Paste your Personal Access Token
+      #    - Click "Add secret"
+      # 
+      # 3. Re-run this workflow
+      # 
+      # ALTERNATIVE: SSH Deploy Key (see WORKFLOW_AUTHENTICATION_SETUP.md)
+      # -------------------------------------------------------------------
+      # For enhanced security, you can use an SSH deploy key instead of PAT.
+      # Set USE_SSH_AUTH=true in repository variables and configure SSH_DEPLOY_KEY secret.
+      # See the "Setup SSH Deploy Key" step above for SSH configuration.
+      # 
       - name: Setup Personal Access Token (if SSH not used)
         if: steps.check_changes.outputs.has_changes == 'true' && vars.USE_SSH_AUTH != 'true'
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
         run: |
           if [ -n "$GITHUB_PAT" ]; then
+            echo "✓ GITHUB_PAT secret found"
             echo "Setting up Personal Access Token authentication..."
             
-            # Configure Git to use the PAT
-            # Note: GitHub automatically masks secrets in logs, so the token won't be exposed
+            # Configure Git to use the PAT for authentication
+            # Format: https://x-access-token:TOKEN@github.com/OWNER/REPO.git
+            # Note: GitHub automatically masks the token in logs for security
             git remote set-url origin "https://x-access-token:${GITHUB_PAT}@github.com/${{ github.repository }}.git"
             
-            echo "✓ Personal Access Token configured"
+            echo "✓ Personal Access Token configured successfully"
+            echo "✓ Authentication ready for Git LFS push operations"
           else
-            echo "⚠️ GITHUB_PAT secret not found"
-            echo "Using default GITHUB_TOKEN (may have limited permissions on forks)"
-            git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+            echo "❌ ERROR: GITHUB_PAT secret not found!"
+            echo ""
+            echo "═══════════════════════════════════════════════════════════════"
+            echo "  AUTHENTICATION REQUIRED FOR GIT LFS ON PUBLIC FORKS"
+            echo "═══════════════════════════════════════════════════════════════"
+            echo ""
+            echo "This workflow cannot push Git LFS data without proper authentication."
+            echo "The default GITHUB_TOKEN has insufficient permissions on public forks."
+            echo ""
+            echo "Please set up a GITHUB_PAT secret with the following scopes:"
+            echo "  • repo (Full control of private repositories)"
+            echo "  • workflow (Update GitHub Action workflows)"
+            echo ""
+            echo "Quick Setup Guide:"
+            echo "-------------------"
+            echo "1. Create Personal Access Token:"
+            echo "   → Visit: https://github.com/settings/tokens"
+            echo "   → Click: Generate new token (classic)"
+            echo "   → Select scopes: repo + workflow"
+            echo "   → Copy the generated token"
+            echo ""
+            echo "2. Add as Repository Secret:"
+            echo "   → Go to: Repository Settings → Secrets and variables → Actions"
+            echo "   → Click: New repository secret"
+            echo "   → Name: GITHUB_PAT"
+            echo "   → Value: (paste your token)"
+            echo ""
+            echo "3. Re-run this workflow"
+            echo ""
+            echo "For detailed instructions, see: WORKFLOW_AUTHENTICATION_SETUP.md"
+            echo "═══════════════════════════════════════════════════════════════"
+            echo ""
+            exit 1
           fi
+      
+      # VALIDATE AUTHENTICATION BEFORE PUSH
+      # ====================================
+      # This step verifies that proper authentication is configured before attempting to push.
+      # It prevents wasting time on failed push attempts and provides clear error messages.
+      - name: Validate authentication setup
+        if: steps.check_changes.outputs.has_changes == 'true'
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+          USE_SSH: ${{ vars.USE_SSH_AUTH }}
+        run: |
+          echo "Validating authentication configuration..."
+          echo ""
+          
+          # Check if SSH authentication is configured
+          if [ "$USE_SSH" == "true" ]; then
+            if [ -n "$SSH_DEPLOY_KEY" ]; then
+              echo "✓ SSH Deploy Key authentication configured"
+              exit 0
+            else
+              # This should rarely happen as the SSH setup step would have failed earlier
+              echo "❌ ERROR: USE_SSH_AUTH is enabled but SSH_DEPLOY_KEY secret not found"
+              echo "The 'Setup SSH Deploy Key' step should have caught this earlier."
+              exit 1
+            fi
+          fi
+          
+          # Check if PAT authentication is configured
+          if [ -n "$GITHUB_PAT" ]; then
+            echo "✓ Personal Access Token (GITHUB_PAT) configured"
+            echo "✓ Ready to push with elevated permissions"
+            exit 0
+          fi
+          
+          # No valid authentication found
+          echo "❌ ERROR: No valid authentication configured!"
+          echo ""
+          echo "This workflow requires either:"
+          echo "  1. GITHUB_PAT secret (recommended for public forks)"
+          echo "  2. SSH_DEPLOY_KEY secret + USE_SSH_AUTH=true variable"
+          echo ""
+          echo "The default GITHUB_TOKEN cannot push Git LFS data to public forks."
+          echo "See the 'Setup Personal Access Token' step above for setup instructions."
+          echo ""
+          exit 1
       
       - name: Push changes
         if: steps.check_changes.outputs.has_changes == 'true'
@@ -282,18 +458,44 @@ jobs:
               else
                 echo "❌ Failed to push changes after $max_attempts attempts"
                 echo ""
-                echo "This may happen if:"
-                echo "  - Authentication credentials are missing or invalid"
-                echo "  - The branch has been updated since checkout"
-                echo "  - Network connectivity issues"
-                echo "  - Large file transfer timeout"
-                echo "  - Git LFS quota exceeded"
+                echo "═══════════════════════════════════════════════════════════════"
+                echo "  PUSH FAILED: AUTHENTICATION OR PERMISSIONS ISSUE"
+                echo "═══════════════════════════════════════════════════════════════"
                 echo ""
-                echo "Required secrets (at least one):"
-                echo "  1. SSH_DEPLOY_KEY (for SSH authentication) + set USE_SSH_AUTH=true in repository variables"
-                echo "  2. GITHUB_PAT (for token authentication with repo and workflow scopes)"
+                echo "Common causes:"
+                echo "  • Missing or invalid GITHUB_PAT secret"
+                echo "  • PAT lacks required scopes (repo, workflow)"
+                echo "  • PAT has expired"
+                echo "  • Network connectivity issues"
+                echo "  • Git LFS quota exceeded"
                 echo ""
-                echo "Please check the workflow run logs and repository secrets configuration"
+                echo "If you see: '@github-actions[bot] can not upload new objects'"
+                echo "  → This means GITHUB_PAT is not configured or invalid"
+                echo ""
+                echo "SOLUTION:"
+                echo "----------"
+                echo "1. Verify GITHUB_PAT secret exists:"
+                echo "   → Repository Settings → Secrets and variables → Actions"
+                echo "   → Should see 'GITHUB_PAT' in the list"
+                echo ""
+                echo "2. If missing, create a new Personal Access Token:"
+                echo "   → Visit: https://github.com/settings/tokens"
+                echo "   → Generate new token (classic)"
+                echo "   → Select scopes: ✓ repo, ✓ workflow"
+                echo "   → Add as GITHUB_PAT secret in repository settings"
+                echo ""
+                echo "3. If exists but failing, check:"
+                echo "   → Token hasn't expired (check expiration date)"
+                echo "   → Token has 'repo' and 'workflow' scopes"
+                echo "   → No typos when copying/pasting the token"
+                echo ""
+                echo "For detailed setup instructions:"
+                echo "  → See: WORKFLOW_AUTHENTICATION_SETUP.md in this repository"
+                echo ""
+                echo "Alternative: Use SSH Deploy Key"
+                echo "  → See: WORKFLOW_AUTHENTICATION_SETUP.md (Method 1)"
+                echo "═══════════════════════════════════════════════════════════════"
+                echo ""
                 exit 1
               fi
             fi

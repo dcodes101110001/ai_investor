@@ -1,5 +1,10 @@
 # GitHub Actions Workflow Fix - HTTP 408 Timeout Error
 
+> **✅ LATEST UPDATE (December 2024):**
+> The workflow now includes comprehensive inline documentation for authentication setup.
+> Check the workflow file (`.github/workflows/download-simfin-data.yml`) for detailed 
+> step-by-step instructions on configuring GITHUB_PAT or SSH authentication.
+
 > **⚠️ IMPORTANT UPDATE (December 2024):**
 > If you're running this workflow on a **public fork**, you may encounter the error:
 > `@github-actions[bot] can not upload new objects to public fork`
