@@ -11,5 +11,15 @@
 
 Stock fundamental and price data from https://simfin.com/ is required (their free data will do to run things). No affiliation (personally I think their product is good).
 
+## Automated Data Download
+
+This repository includes a GitHub Actions workflow that automatically downloads SimFin data daily at 2 AM UTC. To enable this:
+
+1. Get a free API key from [SimFin.com](https://simfin.com/)
+2. Add it as a repository secret named `SIMFIN_API_KEY`
+3. See [SIMFIN_SETUP.md](SIMFIN_SETUP.md) for detailed setup instructions
+
+The data is saved to the `stock_data/` directory and refreshed daily.
+
 ## Disclaimer
 The author does not make any guarantee or other promise as to any results that may be obtained from using the content. You should never make any investment decision without first consulting with your financial advisor and conducting your research and due diligence. To the maximum extent permitted by law, the author disclaims all liability in the event any information, commentary, analysis, opinions, advice and/or recommendations contained in this book prove to be inaccurate, incomplete or unreliable or result in any investment or other losses.
