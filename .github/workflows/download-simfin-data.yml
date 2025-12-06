@@ -17,6 +17,10 @@ jobs:
     name: Download SimFin Stock Data
     runs-on: ubuntu-latest
     
+    # Set explicit permissions for GITHUB_TOKEN
+    permissions:
+      contents: read
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
