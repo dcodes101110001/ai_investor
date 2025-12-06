@@ -92,7 +92,7 @@ jobs:
           echo "Verifying Git LFS file tracking..."
           
           # Check if CSV files exist to track
-          if [ -f stock_data/*.csv ] || [ -d stock_data/ ]; then
+          if [ -d stock_data/ ] && [ -n "$(find stock_data -name '*.csv' -print -quit)" ]; then
             echo "Files in stock_data that will be tracked by LFS:"
             git lfs track 2>/dev/null || echo "Git LFS tracking patterns:"
             cat .gitattributes | grep "\.csv"
@@ -174,7 +174,7 @@ jobs:
           while [ $attempt -le $max_attempts ]; do
             echo "Push attempt $attempt of $max_attempts..."
             
-            # Push with LFS - this will automatically handle LFS files
+            # Push commits and LFS objects (using origin HEAD for explicit branch)
             if git push origin HEAD; then
               echo "✓ Changes pushed successfully to branch: ${{ github.ref_name }}"
               echo ""
@@ -241,9 +241,13 @@ jobs:
           
           # Add Git LFS information
           echo "### Git LFS Status" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          git lfs ls-files 2>/dev/null || echo "No files tracked by LFS yet" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          if git lfs ls-files 2>/dev/null | grep -q .; then
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            git lfs ls-files >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No files tracked by LFS yet" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           
           # Add commit status information

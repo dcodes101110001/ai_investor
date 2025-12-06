@@ -71,6 +71,7 @@ git config --global lfs.transfer.maxretries 3
 - Shows which files will be tracked by LFS
 
 **Step 5: Enhanced Push with LFS**
+- Uses `git push origin HEAD` to explicitly push to the current branch
 - Automatically handles LFS files during push
 - Shows LFS transfer summary after successful push
 - Includes LFS quota exceeded error in failure messages
@@ -161,7 +162,7 @@ git push --force
 New clones will automatically use LFS for tracked files:
 
 ```bash
-git clone https://github.com/dcodes101110001/ai_investor.git
+git clone https://github.com/<username>/ai_investor.git
 cd ai_investor
 # LFS files are automatically downloaded during checkout
 ```
