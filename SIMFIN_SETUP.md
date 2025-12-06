@@ -42,17 +42,32 @@ You can manually trigger the workflow to verify it works:
 1. Go to the **Actions** tab in your repository
 2. Select the **Download SimFin Data** workflow from the left sidebar
 3. Click the **Run workflow** button
-4. Select the branch and click **Run workflow**
-5. Wait for the workflow to complete
-6. Check the logs to ensure data was downloaded successfully
+4. Select the branch you want to update (e.g., `main`)
+5. Click **Run workflow**
+6. Wait for the workflow to complete (typically 2-5 minutes)
+7. Check the logs to ensure data was downloaded successfully
+8. Verify that new data files appear in the `stock_data/` directory with a new commit
 
 ### Expected Behavior
 
 When the workflow runs successfully:
 - ✅ The workflow will download 4 datasets (Income Statements, Balance Sheets, Cash Flow Statements, Share Prices)
 - ✅ CSV files will be saved to the `stock_data/` directory
+- ✅ Changes will be automatically committed and pushed to the repository
 - ✅ Logs will show the number of rows downloaded for each dataset
 - ✅ A workflow artifact containing the data will be created
+- ✅ The repository will contain the latest financial data
+- ✅ A new commit by `github-actions[bot]` will appear in the commit history with message like "chore: update SimFin data - YYYY-MM-DD HH:MM:SS UTC"
+
+### Verifying the Commit
+
+After a successful workflow run:
+
+1. Go to the repository's main page
+2. Check the latest commit - it should be from `github-actions[bot]`
+3. Click on the commit to see the changes
+4. Verify that files in `stock_data/` were added or modified
+5. Navigate to the `stock_data/` directory to see the CSV files
 
 ### Troubleshooting
 
@@ -72,19 +87,29 @@ If the workflow fails:
    - Network issues: Temporary connectivity problems (workflow will retry next day)
    - API rate limits: Free accounts have download limits
    - SimFin service down: Check SimFin's status page
+   - Push failures: May occur if the branch was updated during workflow execution
+   
+4. **Auto-commit specific issues:**
+   - **Permission denied on push:** Ensure the workflow has `contents: write` permission
+   - **No changes committed:** This is normal if the data hasn't changed since the last download
+   - **Merge conflicts:** Should not occur as the workflow only modifies files in `stock_data/`
+   - **Bot commits not appearing:** Check that the workflow completed successfully and didn't fail at the push step
 
 ## Accessing Downloaded Data
 
 The downloaded data files are:
-- Not committed to the repository (excluded via `.gitignore`)
-- Available as workflow artifacts for 30 days
-- Automatically refreshed daily
+- **Automatically committed to the repository** after each successful download
+- Updated daily at 2:00 AM UTC
+- Available directly in the `stock_data/` directory on the main branch
+- Also available as workflow artifacts for 30 days
 
 To access the data:
-1. Go to the **Actions** tab
-2. Click on a successful workflow run
-3. Scroll to the **Artifacts** section at the bottom
-4. Download the `simfin-data-*` artifact
+1. **From the repository:** The latest data is always available in the `stock_data/` directory
+2. **From workflow artifacts:** 
+   - Go to the **Actions** tab
+   - Click on a successful workflow run
+   - Scroll to the **Artifacts** section at the bottom
+   - Download the `simfin-data-*` artifact
 
 ## Local Usage
 
@@ -133,5 +158,6 @@ For issues related to:
 
 - ✅ API key is stored securely in GitHub Secrets
 - ✅ API key is never logged or exposed in workflow runs
-- ✅ Workflow has minimal permissions (read-only access to repository)
-- ✅ Downloaded data files are not committed to version control
+- ✅ Workflow has write permissions to commit downloaded data
+- ✅ Commits are made by `github-actions[bot]` user
+- ✅ Downloaded data files are committed to version control for easy access
