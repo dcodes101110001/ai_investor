@@ -85,6 +85,14 @@ jobs:
         id: check_changes
         run: |
           echo "Checking for changes in stock_data directory..."
+          
+          # Verify directory exists before attempting git operations
+          if [ ! -d "stock_data" ]; then
+            echo "⚠️ stock_data directory does not exist"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
           git add stock_data/
           
           if git diff --staged --quiet; then
@@ -101,21 +109,31 @@ jobs:
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
           echo "Committing changes to repository..."
-          current_date=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          git commit -m "chore: update SimFin data - $current_date"
+          current_date=$(date -u +"%Y-%m-%d %H:%M:%S")
+          git commit -m "chore: update SimFin data - $current_date UTC"
           echo "✓ Changes committed successfully"
       
       - name: Push changes
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
           echo "Pushing changes to remote repository..."
-          git push
-          echo "✓ Changes pushed successfully to branch: ${{ github.ref_name }}"
-          echo ""
-          echo "Summary:"
-          echo "  - Data downloaded and committed"
-          echo "  - Branch: ${{ github.ref_name }}"
-          echo "  - Commit: $(git rev-parse HEAD)"
+          
+          # Push with error handling
+          if git push; then
+            echo "✓ Changes pushed successfully to branch: ${{ github.ref_name }}"
+            echo ""
+            echo "Summary:"
+            echo "  - Data downloaded and committed"
+            echo "  - Branch: ${{ github.ref_name }}"
+            echo "  - Commit: $(git rev-parse HEAD)"
+          else
+            echo "❌ Failed to push changes"
+            echo "This may happen if:"
+            echo "  - The branch has been updated since checkout"
+            echo "  - Network connectivity issues"
+            echo "Please check the workflow run logs for details"
+            exit 1
+          fi
       
       - name: Upload data as artifact
         if: always()
