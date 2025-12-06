@@ -1,5 +1,18 @@
 # GitHub Actions Workflow Fix - HTTP 408 Timeout Error
 
+> **⚠️ IMPORTANT UPDATE (December 2024):**
+> If you're running this workflow on a **public fork**, you may encounter the error:
+> `@github-actions[bot] can not upload new objects to public fork`
+> 
+> This is a GitHub limitation on fork permissions. Please see the new
+> **[WORKFLOW_AUTHENTICATION_SETUP.md](WORKFLOW_AUTHENTICATION_SETUP.md)** guide for solutions using:
+> - SSH Deploy Keys (recommended), or
+> - Personal Access Tokens
+> 
+> The workflow now supports pushing to a dedicated branch (`data-updates`) with proper authentication.
+
+---
+
 ## Problem Description
 
 The GitHub Actions workflow for downloading SimFin data was experiencing HTTP 408 timeout errors during the `git push` operation. This occurred when attempting to push approximately 423MB of financial data (including a 414MB daily share prices CSV file) to the repository.
