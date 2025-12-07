@@ -716,7 +716,10 @@ jobs:
           echo "Resetting to clean state..."
           git reset --hard HEAD
           
-          # Remove untracked files (safe in this context as we're about to checkout main)
+          # Remove untracked files - safe here because:
+          # 1. We're about to checkout main branch anyway (discarding current branch state)
+          # 2. All important files are already tracked or will be recreated
+          # 3. This step runs after data is already committed to data-update branch
           git clean -fd
           echo "✓ Cleaned up conflicted state"
           
