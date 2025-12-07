@@ -8,8 +8,9 @@
 #   
 #   The workflow performs the following operations:
 #   1. Downloads data to data-update branch with large files split for Git
-#   2. Combines split files back into single CSV files
-#   3. Pushes combined CSV files to the main branch automatically
+#   2. For non-main branches: Combines split files back into single CSV files
+#   3. For non-main branches: Pushes combined CSV files to the main branch automatically
+#   4. For main branch: Pushes split files directly without combining
 # 
 # SCHEDULE:
 #   Runs daily at 2 AM UTC (automatic)
@@ -583,7 +584,7 @@ jobs:
           done
       
       - name: Combine split files
-        if: steps.check_changes.outputs.has_changes == 'true'
+        if: steps.check_changes.outputs.has_changes == 'true' && vars.DATA_BRANCH != 'main'
         run: |
           echo "Combining split CSV files into single files..."
           
@@ -644,36 +645,27 @@ jobs:
             echo "⚠️ stock_data directory does not exist"
           fi
       
-      - name: Push combined files to main branch
-        if: steps.check_changes.outputs.has_changes == 'true'
+      - name: Push files to main branch
+        if: steps.check_changes.outputs.has_changes == 'true' && vars.DATA_BRANCH == 'main'
         env:
           GIT_PAT: ${{ secrets.GIT_PAT }}
         run: |
-          echo "Preparing to push combined CSV files to main branch..."
+          echo "Preparing to push CSV files to main branch..."
           
           # Store current branch name
           DATA_BRANCH="${{ vars.DATA_BRANCH || 'data-update' }}"
           
-          # Create a temporary directory for combined files
-          TEMP_DIR="/tmp/combined_csv_files"
+          # Create a temporary directory for files
+          TEMP_DIR="/tmp/csv_files"
           mkdir -p "$TEMP_DIR"
           
-          # Copy only the combined CSV files (not .part* files) to temp directory
-          echo "Copying combined CSV files to temporary directory..."
-          find stock_data -type f -name "*.csv" -not -name "*.part*" -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
+          # Copy all CSV files (including .part* files) to temp directory
+          echo "Copying CSV files to temporary directory..."
+          find stock_data -type f \( -name "*.csv" -o -name "*.part*" \) -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
           
           # Count the files copied
-          file_count=$(find "$TEMP_DIR" -type f -name "*.csv" 2>/dev/null | wc -l)
-          echo "Number of combined CSV files to push: $file_count"
-          
-          if [ "$file_count" -eq 0 ]; then
-            echo "⚠️ No combined CSV files found to push to main branch"
-            echo "This might be because all files were small enough to not need splitting"
-            # Copy all CSV files if no combined files exist
-            find stock_data -type f -name "*.csv" -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
-            file_count=$(find "$TEMP_DIR" -type f -name "*.csv" 2>/dev/null | wc -l)
-            echo "Copying all CSV files instead: $file_count files"
-          fi
+          file_count=$(find "$TEMP_DIR" -type f \( -name "*.csv" -o -name "*.part*" \) 2>/dev/null | wc -l)
+          echo "Number of CSV files to push: $file_count"
           
           if [ "$file_count" -eq 0 ]; then
             echo "⚠️ No CSV files found at all - skipping main branch push"
@@ -696,9 +688,9 @@ jobs:
           mkdir -p stock_data
           
           # Copy combined files to stock_data directory on main branch
-          echo "Copying combined CSV files to main branch stock_data directory..."
+          echo "Copying CSV files to main branch stock_data directory..."
           if [ "$file_count" -gt 0 ]; then
-            find "$TEMP_DIR" -type f -name "*.csv" -exec cp {} stock_data/ \; || {
+            find "$TEMP_DIR" -type f \( -name "*.csv" -o -name "*.part*" \) -exec cp {} stock_data/ \; || {
               echo "❌ Failed to copy files to stock_data directory"
               exit 1
             }
@@ -719,11 +711,11 @@ jobs:
             
             # Commit the changes
             current_date=$(date -u +"%Y-%m-%d %H:%M:%S")
-            git commit -m "chore: update combined CSV files - $current_date UTC"
+            git commit -m "chore: update CSV files - $current_date UTC"
             echo "✓ Changes committed to main branch"
             
             # Push to main branch
-            echo "Pushing combined CSV files to main branch..."
+            echo "Pushing CSV files to main branch..."
             
             # Configure authentication if GIT_PAT is available
             if [ -n "$GIT_PAT" ]; then
@@ -738,10 +730,10 @@ jobs:
               echo "Push attempt $attempt of $max_attempts to main branch..."
               
               if git push origin main; then
-                echo "✓ Combined CSV files pushed successfully to main branch"
+                echo "✓ CSV files pushed successfully to main branch"
                 echo ""
                 echo "Summary:"
-                echo "  - Combined CSV files committed to main branch"
+                echo "  - CSV files committed to main branch"
                 echo "  - Files updated: $file_count"
                 echo "  - Branch: main"
                 echo "  - Commit: $(git rev-parse HEAD)"
@@ -768,22 +760,6 @@ jobs:
           # Clean up temporary directory
           echo "Cleaning up temporary files..."
           rm -rf "$TEMP_DIR"
-          
-          # Remove combined files from working directory to avoid confusion
-          # (They were only needed for pushing to main branch)
-          echo "Removing combined CSV files from working directory..."
-          combined_files=$(find stock_data -type f -name "*.csv" -not -name "*.part*" 2>/dev/null || true)
-          if [ -n "$combined_files" ]; then
-            echo "Files to remove:"
-            echo "$combined_files"
-            # Remove the files (already found above)
-            echo "$combined_files" | while IFS= read -r file; do
-              rm -f "$file"
-            done
-            echo "✓ Combined files removed from working directory"
-          else
-            echo "No combined files to remove"
-          fi
           
           # Switch back to data branch
           echo "Switching back to $DATA_BRANCH branch..."
@@ -828,11 +804,17 @@ jobs:
             echo "✅ **Changes committed and pushed to repository**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Data Update Branch:** \`$TARGET_BRANCH\`" >> $GITHUB_STEP_SUMMARY
-            echo "- Split files committed for Git compatibility" >> $GITHUB_STEP_SUMMARY
+            if [ "$TARGET_BRANCH" == "main" ]; then
+              echo "- Split files committed directly (no combining)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- Split files committed for Git compatibility" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Main Branch:** \`main\`" >> $GITHUB_STEP_SUMMARY
-            echo "- Combined CSV files pushed automatically" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            if [ "$TARGET_BRANCH" != "main" ]; then
+              echo "**Main Branch:** \`main\`" >> $GITHUB_STEP_SUMMARY
+              echo "- Combined CSV files pushed automatically" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "Latest commit: \`$(git rev-parse --short HEAD)\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Authentication Method" >> $GITHUB_STEP_SUMMARY
