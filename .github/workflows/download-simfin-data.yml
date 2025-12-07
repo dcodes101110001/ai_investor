@@ -703,10 +703,10 @@ jobs:
           if [ -f .git/MERGE_HEAD ]; then
             echo "⚠️ Detected unresolved merge state. Cleaning up..."
             git merge --abort 2>/dev/null || true
+            # Ensure clean working directory after aborting merge (discards uncommitted changes)
+            git reset --hard HEAD
           fi
           
-          # Ensure clean working directory before checkout
-          git reset --hard HEAD
           git checkout main
           
           # Ensure stock_data directory exists on main branch
