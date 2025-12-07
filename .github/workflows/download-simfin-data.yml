@@ -698,14 +698,13 @@ jobs:
           }
           
           echo "Checking out main branch..."
-          # Clean up any merge state before checkout to avoid "needs merge" errors
+          # Clean up any merge/rebase state before checkout to avoid "needs merge" errors
           # This can happen if the workflow file itself was modified in different branches
-          if [ -f .git/MERGE_HEAD ]; then
-            echo "⚠️ Detected unresolved merge state. Cleaning up..."
-            git merge --abort 2>/dev/null || true
-            # Ensure clean working directory after aborting merge (discards uncommitted changes)
-            git reset --hard HEAD
-          fi
+          echo "Cleaning up any conflicted state..."
+          git merge --abort 2>/dev/null || true
+          git rebase --abort 2>/dev/null || true
+          git reset --hard HEAD
+          git clean -fd
           
           git checkout main
           
