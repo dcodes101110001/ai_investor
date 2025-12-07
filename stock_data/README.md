@@ -15,20 +15,19 @@ The workflow `.github/workflows/download-simfin-data.yml` runs daily at 2 AM UTC
 
 **Workflow Process:**
 1. Downloads data to the `data-update` branch with large files split into 50MB chunks (for GitHub compatibility)
-2. Combines split files back into single CSV files
-3. Pushes the combined CSV files to the `main` branch automatically
+2. Pushes the split files to the `main` branch automatically
 
 **Result:**
 - `data-update` branch: Contains split files (*.part*) for large CSVs
-- `main` branch: Contains combined, ready-to-use CSV files in the `stock_data` directory
+- `main` branch: Contains the same split files (*.part*) for large CSVs
 
 ## Large File Handling
 
-Due to GitHub's 100MB file size limit, large CSV files (particularly `us-shareprices-daily.csv`) are automatically split into 50MB chunks with `.part*` extensions on the `data-update` branch.
+Due to GitHub's 100MB file size limit, large CSV files (particularly `us-shareprices-daily.csv`) are automatically split into 50MB chunks with `.part*` extensions.
 
-**Note:** You don't need to manually reconstruct split files. The workflow automatically combines them and pushes the complete CSV files to the `main` branch.
+**Note:** Split files are pushed to both `data-update` and `main` branches. To use the data, you'll need to manually reconstruct the split files.
 
-### Manual Reconstruction (if needed)
+### Manual Reconstruction
 
 To reconstruct split files manually:
 ```bash
