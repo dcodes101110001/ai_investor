@@ -8,7 +8,7 @@
 #   
 #   The workflow performs the following operations:
 #   1. Downloads data to data-update branch with large files split for Git
-#   2. For non-main branches: Pushes CSV files to the main branch automatically
+#   2. For non-main branches: Pushes split files to the main branch automatically
 #   3. For main branch: Pushes split files directly
 # 
 # SCHEDULE:
@@ -582,7 +582,7 @@ jobs:
             fi
           done
       
-      - name: Push files to main branch
+      - name: Push split files to main branch
         if: steps.check_changes.outputs.has_changes == 'true'
         env:
           GIT_PAT: ${{ secrets.GIT_PAT }}
@@ -597,22 +597,22 @@ jobs:
             exit 0
           fi
           
-          echo "Preparing to push CSV files to main branch..."
+          echo "Preparing to push split files to main branch..."
           
-          # Create a temporary directory for CSV files
+          # Create a temporary directory for data files
           TEMP_DIR="/tmp/csv_files"
           mkdir -p "$TEMP_DIR"
           
-          # Copy all CSV files to temp directory
-          echo "Copying CSV files to temporary directory..."
-          find stock_data -type f -name "*.csv" -not -name "*.part*" -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
+          # Copy all CSV files (including split files) to temp directory
+          echo "Copying all data files to temporary directory..."
+          find stock_data -type f \( -name "*.csv" -o -name "*.part*" \) -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
           
           # Count the files copied
-          file_count=$(find "$TEMP_DIR" -type f -name "*.csv" 2>/dev/null | wc -l)
-          echo "Number of CSV files to push: $file_count"
+          file_count=$(find "$TEMP_DIR" -type f 2>/dev/null | wc -l)
+          echo "Number of files to push: $file_count"
           
           if [ "$file_count" -eq 0 ]; then
-            echo "⚠️ No CSV files found at all - skipping main branch push"
+            echo "⚠️ No data files found - skipping main branch push"
             exit 0
           fi
           
@@ -656,14 +656,14 @@ jobs:
           # Ensure stock_data directory exists on main branch
           mkdir -p stock_data
           
-          # Copy CSV files to stock_data directory on main branch
-          echo "Copying CSV files to main branch stock_data directory..."
+          # Copy all data files to stock_data directory on main branch
+          echo "Copying all data files to main branch stock_data directory..."
           if [ "$file_count" -gt 0 ]; then
-            find "$TEMP_DIR" -type f -name "*.csv" -exec cp {} stock_data/ \; || {
+            find "$TEMP_DIR" -type f -exec cp {} stock_data/ \; || {
               echo "❌ Failed to copy files to stock_data directory"
               exit 1
             }
-            echo "✓ Copied $file_count CSV files to stock_data directory"
+            echo "✓ Copied $file_count data files to stock_data directory"
           else
             echo "⚠️ No files to copy"
           fi
@@ -680,11 +680,11 @@ jobs:
             
             # Commit the changes
             current_date=$(date -u +"%Y-%m-%d %H:%M:%S")
-            git commit -m "chore: update CSV files - $current_date UTC"
+            git commit -m "chore: update data files (including split files) - $current_date UTC"
             echo "✓ Changes committed to main branch"
             
             # Push to main branch
-            echo "Pushing CSV files to main branch..."
+            echo "Pushing data files to main branch..."
             
             # Configure authentication if GIT_PAT is available
             if [ -n "$GIT_PAT" ]; then
@@ -699,10 +699,10 @@ jobs:
               echo "Push attempt $attempt of $max_attempts to main branch..."
               
               if git push origin main; then
-                echo "✓ CSV files pushed successfully to main branch"
+                echo "✓ Data files pushed successfully to main branch"
                 echo ""
                 echo "Summary:"
-                echo "  - CSV files committed to main branch"
+                echo "  - Data files (including split files) committed to main branch"
                 echo "  - Files updated: $file_count"
                 echo "  - Branch: main"
                 echo "  - Commit: $(git rev-parse HEAD)"
@@ -781,7 +781,7 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             if [ "$TARGET_BRANCH" != "main" ]; then
               echo "**Main Branch:** \`main\`" >> $GITHUB_STEP_SUMMARY
-              echo "- CSV files pushed automatically" >> $GITHUB_STEP_SUMMARY
+              echo "- Split files pushed automatically" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
             fi
             echo "Latest commit: \`$(git rev-parse --short HEAD)\`" >> $GITHUB_STEP_SUMMARY
