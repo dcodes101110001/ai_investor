@@ -776,7 +776,7 @@ jobs:
             if [ "$TARGET_BRANCH" == "main" ]; then
               echo "- Split files committed directly" >> $GITHUB_STEP_SUMMARY
             else
-              echo "- CSV files committed for Git compatibility" >> $GITHUB_STEP_SUMMARY
+              echo "- Split files committed for Git compatibility" >> $GITHUB_STEP_SUMMARY
             fi
             echo "" >> $GITHUB_STEP_SUMMARY
             if [ "$TARGET_BRANCH" != "main" ]; then
