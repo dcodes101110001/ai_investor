@@ -8,8 +8,9 @@
 #   
 #   The workflow performs the following operations:
 #   1. Downloads data to data-update branch with large files split for Git
-#   2. Combines split files back into single CSV files
-#   3. Pushes combined CSV files to the main branch automatically
+#   2. For non-main branches: Combines split files back into single CSV files
+#   3. For non-main branches: Pushes combined CSV files to the main branch automatically
+#   4. For main branch: Pushes split files directly without combining
 # 
 # SCHEDULE:
 #   Runs daily at 2 AM UTC (automatic)
@@ -583,7 +584,7 @@ jobs:
           done
       
       - name: Combine split files
-        if: steps.check_changes.outputs.has_changes == 'true'
+        if: steps.check_changes.outputs.has_changes == 'true' && vars.DATA_BRANCH != 'main'
         run: |
           echo "Combining split CSV files into single files..."
           
@@ -644,18 +645,25 @@ jobs:
             echo "⚠️ stock_data directory does not exist"
           fi
       
-      - name: Push combined files to main branch
+      - name: Push files to main branch
         if: steps.check_changes.outputs.has_changes == 'true'
         env:
           GIT_PAT: ${{ secrets.GIT_PAT }}
         run: |
-          echo "Preparing to push combined CSV files to main branch..."
-          
-          # Store current branch name
           DATA_BRANCH="${{ vars.DATA_BRANCH || 'data-update' }}"
           
+          # If we're already on the main branch, skip this step
+          # (files were already committed and pushed to main in the earlier "Push changes" step)
+          if [ "$DATA_BRANCH" == "main" ]; then
+            echo "Already on main branch - split files were pushed directly in previous step"
+            echo "Skipping separate push to main branch"
+            exit 0
+          fi
+          
+          echo "Preparing to push CSV files to main branch..."
+          
           # Create a temporary directory for combined files
-          TEMP_DIR="/tmp/combined_csv_files"
+          TEMP_DIR="/tmp/csv_files"
           mkdir -p "$TEMP_DIR"
           
           # Copy only the combined CSV files (not .part* files) to temp directory
@@ -769,22 +777,6 @@ jobs:
           echo "Cleaning up temporary files..."
           rm -rf "$TEMP_DIR"
           
-          # Remove combined files from working directory to avoid confusion
-          # (They were only needed for pushing to main branch)
-          echo "Removing combined CSV files from working directory..."
-          combined_files=$(find stock_data -type f -name "*.csv" -not -name "*.part*" 2>/dev/null || true)
-          if [ -n "$combined_files" ]; then
-            echo "Files to remove:"
-            echo "$combined_files"
-            # Remove the files (already found above)
-            echo "$combined_files" | while IFS= read -r file; do
-              rm -f "$file"
-            done
-            echo "✓ Combined files removed from working directory"
-          else
-            echo "No combined files to remove"
-          fi
-          
           # Switch back to data branch
           echo "Switching back to $DATA_BRANCH branch..."
           git checkout "$DATA_BRANCH"
@@ -828,11 +820,17 @@ jobs:
             echo "✅ **Changes committed and pushed to repository**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Data Update Branch:** \`$TARGET_BRANCH\`" >> $GITHUB_STEP_SUMMARY
-            echo "- Split files committed for Git compatibility" >> $GITHUB_STEP_SUMMARY
+            if [ "$TARGET_BRANCH" == "main" ]; then
+              echo "- Split files committed directly (no combining)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- Split files committed for Git compatibility" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Main Branch:** \`main\`" >> $GITHUB_STEP_SUMMARY
-            echo "- Combined CSV files pushed automatically" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            if [ "$TARGET_BRANCH" != "main" ]; then
+              echo "**Main Branch:** \`main\`" >> $GITHUB_STEP_SUMMARY
+              echo "- Combined CSV files pushed automatically" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "Latest commit: \`$(git rev-parse --short HEAD)\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Authentication Method" >> $GITHUB_STEP_SUMMARY
