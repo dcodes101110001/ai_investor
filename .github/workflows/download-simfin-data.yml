@@ -605,7 +605,7 @@ jobs:
           
           # Copy all CSV files to temp directory
           echo "Copying CSV files to temporary directory..."
-          find stock_data -type f -name "*.csv" -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
+          find stock_data -type f -name "*.csv" -not -name "*.part*" -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
           
           # Count the files copied
           file_count=$(find "$TEMP_DIR" -type f -name "*.csv" 2>/dev/null | wc -l)
